@@ -14,7 +14,7 @@
 class treeNode{
 public:
     using posSet = std::set<treeNode*>;
-    treeNode(char c) : value(c) { init_pointers(); }
+    treeNode(char c);
     treeNode() { init_pointers(); }
     enum {CAT, OR, STAR, CHAR, END} type;
     void addFollows(treeNode*);

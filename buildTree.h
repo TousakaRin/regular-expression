@@ -21,10 +21,18 @@ treeNode *OR();
 treeNode *TERM();
 treeNode *CAT();
 treeNode *CHAR();
+treeNode *REPEAT(int, int, treeNode*);
+int NUM();
+
+//辅助函数
 void match(char);
+treeNode* treeCopy(treeNode*);
 
 //析构语法树，释放内存
 void deleteTree(treeNode*);
+
+//出错提示
+void printError(int, int);
 
 //打印对应NFA中的重要位置，即DFA中接收字符的位置
 void printImportantPos();

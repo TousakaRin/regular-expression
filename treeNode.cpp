@@ -24,6 +24,13 @@ void treeNode::addFollows(treeNode* node){
     follow->insert(node);
 }
 
+treeNode::treeNode(char c) : value(c) {
+    init_pointers();
+    type = CHAR;
+    first = new posSet({this});
+    last = new posSet({this});
+    isNullable = new bool(false);
+}
 treeNode::~treeNode(){
     delete first;
     first = nullptr;

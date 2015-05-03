@@ -22,7 +22,7 @@ void test(const char *, DFA*);
 int main(int argc, const char * argv[]) {
        
     // insert code here...
-    string input = "(a|b)*abb";
+    string input = "abbaa8{0-0}";
     cout << input << endl;
     treeNode *tree = buildTree(input);
     auto dfa = buildDFA(tree);
