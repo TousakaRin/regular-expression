@@ -21,7 +21,7 @@ treeNode *OR();
 treeNode *TERM();
 treeNode *CAT();
 treeNode *CHAR();
-treeNode *REPEAT(int, int, treeNode*);
+treeNode *REPEAT(int, treeNode*); //将树重复0-i次，适应x{0-i}语法
 int NUM();
 
 //辅助函数

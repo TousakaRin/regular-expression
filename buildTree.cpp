@@ -20,8 +20,7 @@
 static int pos = 0;
 static const std::string *regular = nullptr;
 static char lookahead = ' ';
-static std::set<char> term = {'.'};
-static std::set<char> cat = {'|', '*', '+', '{', '}', ')', ']'};
+static std::set<char> cat = {'|', '*', '+', '{', '}', ')', ']', '?'};
 
 treeNode* buildTree(const std::string &input){
     regular = &input;
@@ -108,16 +107,63 @@ treeNode *TERM(){
         root = node;
 
     }else if (pos < regular->size() && lookahead == '{') {
+        treeNode *copy = root;   //令copy指向CHAR()生成的节点，用于重复时的copy
         match('{');
         int low = 0;
         low = NUM();
         if (lookahead == '-') {
             match('-');
             int high = NUM();
-            root = REPEAT(low, high, root);
+            match('}');
+            if (low > high){
+                printError(pos - 3, pos + 1);
+            }
+            if (high == 0) {
+                deleteTree(root);
+                return nullptr;
+            }
+            for (int i = 0; i < high; i++) {
+                if (i == 0 && low == 0) {
+                    if (root->isNullable) {
+                        *root->isNullable = true;
+                    }else {
+                        root->isNullable = new bool(true);
+                    }
+                    continue;
+                }
+                treeNode *node = new treeNode();
+                node->type = treeNode::CAT;
+                node->left = root;
+                node->right = treeCopy(copy);
+                if (i >= low && low > 0) {
+                    if (node->right->isNullable) {
+                        *node->right->isNullable = true;
+                    }else {
+                        node->right->isNullable = new bool(true);
+                    }
+                }
+                root = node;
+            }
         }else if(lookahead == '}') {
             match('}');
-            root = REPEAT(low, low, root);
+            if (low == 0) {
+                deleteTree(root);
+                return nullptr;
+            }
+            for (int i = 0; i < low; ++i ) {
+                treeNode *node = new treeNode();
+                node->type = treeNode::CAT;
+                node->left = root;
+                node->right = treeCopy(copy);
+                root = node;
+            }
+        }
+    }else if (lookahead == '?') {
+        match('?');
+        if (root->isNullable) {
+            *root->isNullable = true;
+        }else {
+            root->isNullable = new bool(true);
         }
     }
     return root;
@@ -202,17 +248,6 @@ void match(char c){
     }
 }
 
-//将一棵树重复low-high次得到的树
-treeNode* REPEAT(int low, int high, treeNode* root){ ///////未完成///////
-    if (low > high) {
-        printError(pos-3, pos+2);
-    }
-    if (low == high) {
-        
-    }
-    return  nullptr;
-}
-
 
 //复制一颗语法树
 treeNode* treeCopy(treeNode *t) {
@@ -245,8 +280,8 @@ treeNode* treeCopy(treeNode *t) {
 int NUM() {
     std::string num;
     while (lookahead >= '0' && lookahead <= '9') {
-        match(lookahead);
         num.push_back(lookahead);
+        match(lookahead);
     }
     std::stringstream ss(num);
     

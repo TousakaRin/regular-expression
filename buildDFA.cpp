@@ -72,12 +72,15 @@ DFA *buildDFA(treeNode* root){
 
 
 void init_first_and_last(treeNode* root){
+    //递归初始化左右子树
     if (!(root->left->first && root->left->last && root->left->isNullable)){
         init_first_and_last(root->left);
     }
     if (root->type != treeNode::STAR && !(root->right->first && root->right->last && root->right-> isNullable)) {
         init_first_and_last(root->right);
     }
+    
+    //OR节点处理
     if (root->type == treeNode::OR && !root->last && !root->first) {
         root->first = new treeNode::posSet();
         for (auto w : *root->left->first){
@@ -102,6 +105,7 @@ void init_first_and_last(treeNode* root){
         return;
     }
     
+    //CAT节点
     if (root->type == treeNode::CAT) {
         root->first = new treeNode::posSet();
         for (auto w : *root->left->first){
@@ -123,6 +127,7 @@ void init_first_and_last(treeNode* root){
         for (auto w : *root->right->last){
             root->last->insert(w);
         }
+        
         if (!(root->isNullable)) {
             root->isNullable = new bool();
             *root->isNullable = *root->left->isNullable && *root->right->isNullable;
@@ -130,6 +135,7 @@ void init_first_and_last(treeNode* root){
         return;
     }
     
+    //STAR节点
     if (root->type == treeNode::STAR) {
         root->first = new treeNode::posSet(root->left->first->begin(), root->left->first->end());
         root->last = new treeNode::posSet(root->left->last->begin(), root->left->last->end());
