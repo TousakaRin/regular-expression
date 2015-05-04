@@ -20,7 +20,11 @@
 static int pos = 0;
 static const std::string *regular = nullptr;
 static char lookahead = ' ';
-static std::set<char> cat = {'|', '*', '+', '{', '}', ')', ']', '?'};
+
+//TERM只能以关键字'('和'['开头，或者以其他任意非关键字的ASCII码符号开头
+static std::set<char> term_un_first = {'|', '{', '}', ']', ')', '*', '+', '?'};
+//当TERM以这些关键字开头时，说明正则表达式本身写错了
+static std::set<char> term_error = {'?', '*', '+', '{', '}'};
 
 treeNode* buildTree(const std::string &input){
     regular = &input;
@@ -46,7 +50,7 @@ void addEndSymbol(treeNode *&tree){
 treeNode* OR(){
     treeNode *root = CAT();
     while (true) {
-        if(lookahead == '|'){
+        if(lookahead == '|'){         //OR_Rest只能以'|'开头
             match('|');
             treeNode *node = new treeNode();
             node->type = treeNode::OR;
@@ -63,7 +67,7 @@ treeNode* OR(){
 treeNode *CAT(){
     treeNode *root = TERM();
     while (true) {
-        if (pos < regular->size() && cat.count(lookahead) == 0) {
+        if (pos < regular->size() && term_un_first.count(lookahead) == 0) {//CAT_Rest只能以TERM开头
             treeNode *right = TERM();
             if (right == nullptr) {     //如果term重复次数仅能为0
                 continue;
@@ -74,13 +78,16 @@ treeNode *CAT(){
             node->right = right;
             root = node;
         }else{
+            if (term_error.count(lookahead) != 0){
+                printError(pos - 3, pos +1);
+            }
             break;
         }
     }
     return  root;
 }
 
-treeNode *TERM(){
+treeNode *TERM(){           //TERM 由CHAR + [重复次数]组成
     treeNode *root = CHAR();
     
     
@@ -169,7 +176,7 @@ treeNode *TERM(){
     return root;
 }
 
-treeNode *CHAR(){
+treeNode *CHAR(){           //CHAR 由(x) [x] 或者 非关键字组成，[ (以外的关键在在进入TERM之前已经被屏蔽
     treeNode *root = nullptr;
     if(pos < regular->size() && lookahead == '('){
         match('(');
@@ -214,7 +221,7 @@ treeNode *CHAR(){
         }
         match(']');
     }else if(pos < regular->size()){
-        if(lookahead == '\\' && pos < regular->size() - 1){
+        if(lookahead == '\\' && pos < regular->size() - 1){  //处理关键字转义
             lookahead = (*regular)[++pos];
         }else if(lookahead == '\\'){
             std::cout << "syntax error !" << std::endl;
