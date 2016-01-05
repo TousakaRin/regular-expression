@@ -4,7 +4,7 @@
 using namespace rgx;
 using namespace std;
 
-string int2string(int i) {
+string rgx::int2string(int i) {
     string s;
     if (i == 0) {
         return "0";
@@ -23,7 +23,7 @@ string int2string(int i) {
     return s;
 } 
 
-string bool2string(bool b) {
+string rgx::bool2string(bool b) {
     if (b) {
         return "true";
     } else {

@@ -1,84 +1,90 @@
 #include "ast.h"
+#include <locale>
 #include <cassert>
 
 using namespace std;
 using namespace rgx;
 
-void _ast::err(wstring::size_type pos, const wstring&re) {
+void _ast::err() {
     cout << "语法错误哟~" << endl;
     cout << "position :  " << pos << endl;
     decltype(pos) start = pos > 5 ? pos - 5 : 0, end = pos + 5 <= re.size() ? pos + 5 : re.size();
+    auto lc = locale("C");
+    locale::global(lc);
+    wcout.imbue(lc);
     wcout << re.substr(start, end - start) << endl;
 }
 
-_ast::_ast(const wstring &re) : pos(0) {
-    root = re_term(re);
+_ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) {
+    root = re_term();
     if (pos != re.size()) {
         root = nullptr;
-        err(pos, re);
+        err();
     }
 }
 
-shared_ptr<_astNode> _ast::re_term(const wstring &re) {
+shared_ptr<_astNode> _ast::re_term() {
     if (pos >= re.size()) {
-        err(pos, re);
+        err();
         return nullptr;
     } 
-    auto r = or_term(re);         //r 始终为子树的根节点
+    auto r = or_term();         //r 始终为子树的根节点
     while (pos < re.size() && re[pos] == '|') {
         ++pos;           // match '|'
         if (pos >= re.size()) {
-            err(pos, re);
+            err();
             return nullptr;
         }
-        auto n = or_term(re);
+        auto n = or_term();
         if (n) {
             auto newRoot = make_shared<_or_node>();
             newRoot->left = r;
             newRoot->right = n;
             r = newRoot;
         } else {
-            err(pos, re);
+            err();
             return nullptr;
         }
     }
     return r;
 }
 
-shared_ptr<_astNode> _ast::or_term(const wstring& re) {
+shared_ptr<_astNode> _ast::or_term() {
     if (pos >= re.size()) {
-        err(pos, re);
+        err();
         return nullptr;
     }
-    auto r = cat_term(re); 
+    auto r = cat_term(); 
     while (pos < re.size()) {
         for (auto c : _cat_start_marsk) {
             if (re[pos] == c) {
                 return r;
             }
         }
-        auto n = cat_term(re);
+        auto n = cat_term();
         if (n) {
             auto newRoot = make_shared<_cat_node>();
             newRoot->left = r;
             newRoot->right = n;
             r = newRoot;
         } else {
-            err(pos, re);
+            err();
             return nullptr;
         }
     } 
     return r;
 }
 
-shared_ptr<_astNode> _ast::cat_term(const wstring& re) {
+shared_ptr<_astNode> _ast::cat_term() {
     // cat_term 可以为null
     if (pos >= re.size()) {
         return nullptr;
     }
-    auto pre = pre_read_term(re);
-    auto r = charSet_term(re);
-    auto post = post_read_term(re);
+    auto pre = pre_read_term();
+    auto r = charSet_term();
+    auto numt = num_term();
+    
+    auto post = post_read_term();
     if (r) {
         r->pre_read = pre; 
         r->post_read = post;
@@ -86,12 +92,12 @@ shared_ptr<_astNode> _ast::cat_term(const wstring& re) {
     return r;
 }
 
-shared_ptr<_astNode> _ast::pre_read_term(const wstring &re) {
+shared_ptr<_astNode> _ast::pre_read_term() {
     //pre_read_term 可以为nullptr
     if (pos + 5 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == '<' && (re[pos + 3] == '!' || re[pos + 3] == '=')) {
-        auto n = re_term(re);
+        auto n = re_term();
         if (n && pos < re.size() && re[pos] == ')') {
             auto r = make_shared<_preRead_node>();
             r->left = n;
@@ -105,12 +111,12 @@ shared_ptr<_astNode> _ast::pre_read_term(const wstring &re) {
     }
 }
 
-shared_ptr<_astNode> _ast::post_read_term(const wstring &re) {
+shared_ptr<_astNode> _ast::post_read_term() {
     //pre_read_term 可以为nullptr
     if (pos + 4 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (re[pos] == '(' && re[pos + 1] == '?'  && (re[pos + 2] == '!' || re[pos + 2] == '=')) {
-        auto n = re_term(re);
+        auto n = re_term();
         if (n && pos < re.size() && re[pos] == ')') {
             auto r = make_shared<_preRead_node>();
             r->left = n;
@@ -124,11 +130,11 @@ shared_ptr<_astNode> _ast::post_read_term(const wstring &re) {
     }
 }
 
-shared_ptr<_astNode> _ast::charSet_term(const wstring& re) {
+shared_ptr<_astNode> _ast::charSet_term() {
     if (pos + 4 < re.size() && re[pos] == '(' && re[pos] + 1 == '?' && re[pos + 2] == ':') {
         //case 1 : (?: ) 
         pos += 3; // match '(?:'
-        auto r = re_term(re);  
+        auto r = re_term();  
         if (r && pos < re.size() && re[pos] == ')') {
             ++pos;      //match ')'
             return r;
@@ -139,7 +145,7 @@ shared_ptr<_astNode> _ast::charSet_term(const wstring& re) {
         //case 2 : ()
         ++pos;    // match'('
         auto r = make_shared<_catch_node>();
-        auto n = re_term(re);
+        auto n = re_term();
         if (n && pos < re.size() && re[pos] == ')') {
             ++pos;  //match')'
             r->catchIndex = catchArray.size();
@@ -147,14 +153,13 @@ shared_ptr<_astNode> _ast::charSet_term(const wstring& re) {
             r->left = n;
             return r;
         } else {
-            err(pos, re);
+            err();
             return nullptr;
         }
-    } else if(pos + 2 < re.size() && re[pos] == '[') {
-        return make_shared<_charSet_node>();        
     } else if (pos + 7 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 3] == '<') {
+        //case 3 : (?P<name> )
         pos += 3;  //match '(?P<'
-        auto r = make_shared<_cat_node>(); 
+        auto r = make_shared<_catch_node>(); 
         wstring catchName;
         while (pos < re.size() && re[pos] != '>') {
             if (re[pos] == '\\') {
@@ -162,29 +167,220 @@ shared_ptr<_astNode> _ast::charSet_term(const wstring& re) {
             } 
             catchName.push_back(re[pos]);
             ++pos;
-        }    // match'name>'
+        }    // match'name'
         if (pos < re.size()) {
-            ++pos;
-            auto n = re_term(re);
-            r->left = n;
-            if (pos < re.size() && re[pos] == ')') {
+            ++pos;  //match '>'
+            auto n = re_term();
+            if (n && pos < re.size() && re[pos] == ')') {
                 ++pos;    //match ')'
+                r->left = n;
+                r->catchIndex = catchArray.size();
+                nameMap[catchName] = catchArray.size();
+                catchArray.push_back(vector<wstring>());
+                return r;
             } else {
-                err(pos, re);
+                err();
                 return nullptr;
             }
         } else {
-            err(pos, re);
+            err();
             return nullptr;
         }
-        catchArray.push_back(vector<wstring>());
-        nameMap[catchName] = catchArray.size() - 1;
-        return r;
+    } else if(pos + 2 < re.size() && re[pos] == '[') {
+            //case 4 : [^-a-bf-i]
+            auto r = make_shared<_charSet_node>();
+            ++pos; //match '['
+            if (pos < re.size() && re[pos] == '\\') {
+                ++pos;
+                switch (pos) {
+                }
+            }
+
+
+            //匹配在[]内作为第一个字符的'^'或'-'
+            //之后的'^'都表示单个字符，'-'都表示范围，不表示范围的'-'需要转义
+            if (pos < re.size() && re[pos] == '^') {
+                r->setInversison();
+                ++pos;  //match '^' : '[^'
+            } 
+            while(pos < re.size() && re[pos] != ']') {
+                auto pre = re[pos];
+                ++pos;  
+                if (pos < re.size() && re[pos] == '-') {
+                    ++pos;
+                    r->addCharRange(pair<wchar_t, wchar_t>(pre, re[pos]));
+                    ++pos;
+                } else if (pos >= re.size()) {
+                    err();
+                    return nullptr;
+                } else {
+                    r->addCharRange(pair<wchar_t, wchar_t>(pre, pre));
+                }
+            }
+            if (pos < re.size() && re[pos] == ']') {
+                ++pos;
+                return r;
+            } else {
+                err();
+                return nullptr;
+            }
+    } else if (pos < re.size() && pos == '\\') {
+        //case 5 : \xxx
+        ++pos;
+        int n = -1;
+        if (pos >= re.size()) {
+            err();
+            return nullptr;
+        }
+
+        if (!isKeyword(pos) && (n = getNum()) < 0) {
+            err();
+            return nullptr;
+        } else if (isKeyword(pos)) { 
+            // \?..\+  and so on
+            return make_shared<_charSet_node>(re[pos]);
+        } else if (n >= 0 && static_cast<unsigned int>(n) < catchArray.size()) {
+            // \1, \2 unnamed reference
+            auto r = make_shared<_reference_node>(n);
+            return r;
+        } else if (re[pos] == '<') {
+            // \<woca> named reference
+            wstring name;
+            while (pos < re.size() && re[pos] != '>') {
+                if (re[pos] == '\\') {
+                    ++pos;
+                    if (pos >= re.size()) {
+                        err();
+                    }
+                }
+                name.push_back(re[pos]);
+                ++pos;
+            }
+            if (pos < re.size() && re[pos] == '>') {
+                if (nameMap.find(name) != nameMap.end()) {
+                    ++pos;
+                    auto r = make_shared<_reference_node>(nameMap[name]);
+                    return r;
+                } else {
+                    //reference not found
+                    err();
+                    return nullptr;
+                }
+            } else {
+                err();
+                return nullptr;
+            }
+        } else if (re[pos] == 'w' || re[pos] == 'W' || re[pos] == 's' || re[pos] == 'S' || re[pos] == 'd' || re[pos] == 'D') {
+            return make_shared<_charSet_node>('s');
+        } else {
+            err();
+            return nullptr;
+        }
     } else {
-        return nullptr;
+        // single char
+        auto r = make_shared<_charSet_node>(re[pos]);
+        ++pos;
+        return r;
     }
 }
 
+shared_ptr<_numCount_node>  _ast::num_term() {
+    if (pos >= re.size()) {
+        return make_shared<_numCount_node>();
+    }
+    if (re[pos] == '{') {
+        ++pos;
+        int lower = getNum();
+        if (lower< 0) {
+            err();
+            return nullptr;
+        }
+        if (re[pos] == '}') {
+            // {56}  match
+            return make_shared<_numCount_node>(lower, lower);
+        }
+        if (re[pos] == '-') {
+            ++pos;
+            int upper = getNum();
+            if (upper < 0) {
+                err();
+                return nullptr;
+            }
+            if (pos < re.size() && re[pos] == '}') {
+                ++pos;
+                if (lower > upper) {
+                    err();
+                    return nullptr;
+                }
+                if (pos < re.size() && re[pos] == '?') {
+                    ++pos; //match {45-83}?
+                    return make_shared<_numCount_node>(lower, upper, false);
+                } else {
+                    return make_shared<_numCount_node>(lower, upper);
+                }
+            }
+        }
+    } else if (re[pos] == '?') {
+        ++pos;
+        if (pos < re.size() && re[pos] == '?') {
+            ++pos;
+            return make_shared<_numCount_node>(0, 1, false);
+        } else {
+            return make_shared<_numCount_node>(0, 1);
+        }
+    } else if (re[pos] == '*') {
+       ++pos;  //match '*'
+       if (pos < re.size() && re[pos] == '?') {
+           ++pos;  //match '*?'
+           return make_shared<_numCount_node>(0, -1, false);
+       } else {
+           return make_shared<_numCount_node>(0, -1);
+       }
+    } else if (re[pos] == '+') {
+        ++pos;  //match '+'
+        if (pos < re.size() && re[pos] == '?') {
+            ++pos;
+            return make_shared<_numCount_node>(1, -1, false);
+        } else {
+            return make_shared<_numCount_node>(1, -1);
+        }
+    }
+    return make_shared<_numCount_node>();
+}
+
+
+_ast::~_ast() {
+    //do nothing ~智能指针就是牛
+}
+
+
+bool _ast::isKeyword(wstring::size_type pos) {
+    for (auto w : _keyword) {
+        if (w == re[pos]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int _ast::getNum() {
+    if (pos >= re.size()) {
+        return -1;
+    }
+    if (re[pos] < '0' || re[pos] > '9') {
+        return -1;
+    }
+    int sum = 0;
+    while (pos < re.size() && re[pos] >= '0' && re[pos] <= '9') {
+        sum += re[pos] - '0';
+        sum *= 10;
+        ++pos;
+    }
+    return sum;
+}
+
 wchar_t _ast::_cat_start_marsk[] = {'{','}', ')', ']', '?', '*', '+', '|'};
+
+wchar_t _ast::_keyword[] = {'{', '}', '(', ')', '[', ']', '|', '+', '*', '?', '\\', '!', '-', '^'};
 
 
