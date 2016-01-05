@@ -1,5 +1,7 @@
 #include "stringTools.h"
+#include <codecvt>
 #include <algorithm>
+#include <locale>
 
 using namespace rgx;
 using namespace std;
@@ -29,4 +31,20 @@ string rgx::bool2string(bool b) {
     } else {
         return "false";
     }
+}
+
+
+
+// convert UTF-8 string to wstring
+std::wstring rgx::utf8_to_wstring (const std::string& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.from_bytes(str);
+}
+
+// convert wstring to UTF-8 string
+std::string rgx::wstring_to_utf8 (const std::wstring& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.to_bytes(str);
 }
