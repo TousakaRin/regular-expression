@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "stringTools.h"
 #include <locale>
 #include <cassert>
 
@@ -8,18 +9,22 @@ using namespace rgx;
 void _ast::err() {
     cout << "语法错误哟~" << endl;
     cout << "position :  " << pos << endl;
-    decltype(pos) start = pos > 5 ? pos - 5 : 0, end = pos + 5 <= re.size() ? pos + 5 : re.size();
-    auto lc = locale("C");
-    locale::global(lc);
-    wcout.imbue(lc);
-    wcout << re.substr(start, end - start) << endl;
+    //decltype(pos) start = pos > 5 ? pos - 5 : 0, end = pos + 5 <= re.size() ? pos + 5 : re.size();
+    if (pos < re.size() - 1) {
+        cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1)) << RESET << wstring_to_utf8(re.substr(pos + 1)) << endl;
+    } else if (pos < re.size()){
+        cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1));
+    } else {
+        cout << wstring_to_utf8(re.substr(0, pos));
+    }
+  //  wcout << re.substr(start, end - start) << endl;
 }
 
 _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) {
     root = re_term();
     if (pos != re.size()) {
+        // err 
         root = nullptr;
-        err();
     }
 }
 
@@ -42,11 +47,16 @@ shared_ptr<_astNode> _ast::re_term() {
             newRoot->right = n;
             r = newRoot;
         } else {
-            err();
+            //err
             return nullptr;
         }
     }
-    return r;
+    if (pos == re.size()) {
+        return r;
+    } else {
+        err();
+        return nullptr;
+    }
 }
 
 shared_ptr<_astNode> _ast::or_term() {
@@ -56,8 +66,9 @@ shared_ptr<_astNode> _ast::or_term() {
     }
     auto r = cat_term(); 
     while (pos < re.size()) {
-        for (auto c : _cat_start_marsk) {
+        for (auto c : _cat_start_mask) {
             if (re[pos] == c) {
+                //此处不应有err()
                 return r;
             }
         }
@@ -82,14 +93,19 @@ shared_ptr<_astNode> _ast::cat_term() {
     }
     auto pre = pre_read_term();
     auto r = charSet_term();
+    if (!r) {
+        return nullptr;
+    }
     auto numt = num_term();
-    
     auto post = post_read_term();
-    if (r) {
+    if (numt) {
+        r->numCount = numt;
         r->pre_read = pre; 
         r->post_read = post;
+        return r;
+    } else {
+        return nullptr;
     }
-    return r;
 }
 
 shared_ptr<_astNode> _ast::pre_read_term() {
@@ -97,7 +113,10 @@ shared_ptr<_astNode> _ast::pre_read_term() {
     if (pos + 5 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == '<' && (re[pos + 3] == '!' || re[pos + 3] == '=')) {
-        auto n = re_term();
+        pos += 4;
+        /********************************/
+        auto n = re_term(); //这里应该使用DFA处理，用来预读的子正则表达式讲道理的话支持纯正则特性就可以了
+        /*******************************/
         if (n && pos < re.size() && re[pos] == ')') {
             auto r = make_shared<_preRead_node>();
             r->left = n;
@@ -319,6 +338,9 @@ shared_ptr<_numCount_node>  _ast::num_term() {
                     return make_shared<_numCount_node>(lower, upper);
                 }
             }
+        } else {
+            err();
+            return nullptr;
         }
     } else if (re[pos] == '?') {
         ++pos;
@@ -345,6 +367,7 @@ shared_ptr<_numCount_node>  _ast::num_term() {
             return make_shared<_numCount_node>(1, -1);
         }
     }
+    // numCount 可以为空！！即只出现一次
     return make_shared<_numCount_node>();
 }
 
@@ -379,7 +402,7 @@ int _ast::getNum() {
     return sum;
 }
 
-wchar_t _ast::_cat_start_marsk[] = {'{','}', ')', ']', '?', '*', '+', '|'};
+wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
 
 wchar_t _ast::_keyword[] = {'{', '}', '(', ')', '[', ']', '|', '+', '*', '?', '\\', '!', '-', '^'};
 

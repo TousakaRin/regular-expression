@@ -32,7 +32,7 @@ private:
     bool isKeyword(std::wstring::size_type);
     int getNum();
 private:
-    static wchar_t _cat_start_marsk[8];
+    static wchar_t _cat_start_mask[8];
     static wchar_t _keyword[17];
     std::vector<std::vector<std::wstring> > catchArray;
     std::map<std::wstring, unsigned int> nameMap; 
