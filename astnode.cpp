@@ -74,9 +74,74 @@ void _charSet_node::addCharRange(pair<wchar_t, wchar_t>&& cr) {
     charset.push_back(std::move(cr));
 }
 
+
+void _charSet_node::addDeleteRange(const pair<wchar_t, wchar_t>& cr) {
+    charset.push_back(cr);
+}
+
+
+void _charSet_node::addDeleteRange(pair<wchar_t, wchar_t>&& cr) {
+    charset.push_back(std::move(cr));
+}
+
+
 void _charSet_node::setInversison() {
     inversion = true;
 }
+
+
+void _charSet_node::addWordRange() {
+    //左闭右开区间~~~~~
+    addCharRange(pair<wchar_t, wchar_t>('a', 'z' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('A', 'Z' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('0', '9' + 1));
+}
+
+void _charSet_node::deleteWordRange() {
+    addDeleteRange(pair<wchar_t, wchar_t>('a', 'z' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('A', 'Z' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('0', '9' + 1));
+}
+
+void _charSet_node::addSpaceRang() {
+    addCharRange(pair<wchar_t, wchar_t>('\t', '\t' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('\r', '\r' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('\n', '\n' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('\b', '\b' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('\f', '\f' + 1));
+    addCharRange(pair<wchar_t, wchar_t>('\v', '\v' + 1));
+}
+
+void _charSet_node::deleteSpaceRange() {
+    addDeleteRange(pair<wchar_t, wchar_t>('\t', '\t' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('\r', '\r' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('\n', '\n' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('\b', '\b' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('\f', '\f' + 1));
+    addDeleteRange(pair<wchar_t, wchar_t>('\v', '\v' + 1));
+
+}
+
+
+void _charSet_node::addDigitRange() {
+    addCharRange(pair<wchar_t, wchar_t>('0', '9' + 1));
+}
+
+void _charSet_node::delteDigitRange() {
+    addDeleteRange(pair<wchar_t, wchar_t>('0', '9' + 1));
+}
+
+
+/*-----------------------------------------------*/
+
+_preRead_node::_preRead_node(bool tag) : pattern_tag(tag), dfaTree(nullptr) {
+
+}
+
+_preRead_node::_preRead_node(shared_ptr<_astNode> reTerm, bool tag) : pattern_tag(tag), dfaTree(reTerm) {
+
+} 
+
 
 /*-----------------------------------------------*/
 

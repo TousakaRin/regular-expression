@@ -23,13 +23,16 @@ void _ast::err() {
 _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) {
     root = re_term();
     if (pos != re.size()) {
-        // err 
+        // 虽然re不用到达正则末尾，但是这里必须到达末尾，否则正则就是非法的
+//        cout <<  "_ast throws" << endl;
+//        err();
         root = nullptr;
     }
 }
 
 shared_ptr<_astNode> _ast::re_term() {
     if (pos >= re.size()) {
+        cout << "re_term throws 1" << endl;
         err();
         return nullptr;
     } 
@@ -37,6 +40,7 @@ shared_ptr<_astNode> _ast::re_term() {
     while (pos < re.size() && re[pos] == '|') {
         ++pos;           // match '|'
         if (pos >= re.size()) {
+            cout << "re_term throws 2" << endl;
             err();
             return nullptr;
         }
@@ -51,16 +55,17 @@ shared_ptr<_astNode> _ast::re_term() {
             return nullptr;
         }
     }
-    if (pos == re.size()) {
-        return r;
-    } else {
-        err();
-        return nullptr;
-    }
+    /*
+     即使是re_term也可以不到达字符串末尾啊！！！
+     因为在处理小括号时直接调用re_term处理了- -
+     比如abc(ef|cd)ghi
+    */
+    return r;
 }
 
 shared_ptr<_astNode> _ast::or_term() {
     if (pos >= re.size()) {
+        cout << "or_term throws 1" << endl;
         err();
         return nullptr;
     }
@@ -79,7 +84,8 @@ shared_ptr<_astNode> _ast::or_term() {
             newRoot->right = n;
             r = newRoot;
         } else {
-            err();
+//            cout << "or_term throws 2" << endl;
+//            err();
             return nullptr;
         }
     } 
@@ -113,16 +119,24 @@ shared_ptr<_astNode> _ast::pre_read_term() {
     if (pos + 5 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == '<' && (re[pos + 3] == '!' || re[pos + 3] == '=')) {
-        pos += 4;
+        pos += 3; //match '(?<'
+        auto r = make_shared<_preRead_node>(re[pos] == '=');
+        ++pos;     // match '=','!'
         /********************************/
         auto n = re_term(); //这里应该使用DFA处理，用来预读的子正则表达式讲道理的话支持纯正则特性就可以了
         /*******************************/
         if (n && pos < re.size() && re[pos] == ')') {
-            auto r = make_shared<_preRead_node>();
-            r->left = n;
-            r->flag = re[pos + 3] == '!';
+            ++pos;  //match ')'
+            r->dfaTree = n;
             return r;
+        } else if (pos >= re.size() || re[pos] != ')') {
+            err();
+            return nullptr;
+        } else if (!n) {
+            return nullptr;
         } else {
+            // 此处应该永远不可达，因为 n, pos < re.size(), re[pos] 都已经全部测试过了
+            // 加上这个是为了消除警告'控制流达到非void函数的末尾'
             return nullptr;
         }
     } else {
@@ -131,17 +145,28 @@ shared_ptr<_astNode> _ast::pre_read_term() {
 }
 
 shared_ptr<_astNode> _ast::post_read_term() {
-    //pre_read_term 可以为nullptr
+    //post_read_term 可以为nullptr
     if (pos + 4 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (re[pos] == '(' && re[pos + 1] == '?'  && (re[pos + 2] == '!' || re[pos + 2] == '=')) {
-        auto n = re_term();
+        pos += 2; //match '(?'
+        auto r = make_shared<_preRead_node>(re[pos] == '=');
+        ++pos;     // match '=','!'
+        /********************************/
+        auto n = re_term(); //这里应该使用DFA处理，用来预读的子正则表达式讲道理的话支持纯正则特性就可以了
+        /*******************************/
         if (n && pos < re.size() && re[pos] == ')') {
-            auto r = make_shared<_preRead_node>();
-            r->left = n;
-            r->flag = re[pos + 2] == '!';
+            ++pos;  //match ')'
+            r->dfaTree = n;
             return r;
+        } else if (pos >= re.size() || re[pos] != ')') {
+            err();
+            return nullptr;
+        } else if (!n) {
+            return nullptr;
         } else {
+            // 此处应该永远不可达，因为 n, pos < re.size(), re[pos] 都已经全部测试过了
+            // 加上这个是为了消除警告'控制流达到非void函数的末尾'
             return nullptr;
         }
     } else {
@@ -150,33 +175,21 @@ shared_ptr<_astNode> _ast::post_read_term() {
 }
 
 shared_ptr<_astNode> _ast::charSet_term() {
-    if (pos + 4 < re.size() && re[pos] == '(' && re[pos] + 1 == '?' && re[pos + 2] == ':') {
+    if (pos + 4 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == ':') {
         //case 1 : (?: ) 
         pos += 3; // match '(?:'
         auto r = re_term();  
         if (r && pos < re.size() && re[pos] == ')') {
             ++pos;      //match ')'
             return r;
-        } else {
-            return nullptr;
-        }
-    } else if (pos < re.size() && re[pos] == '(') {
-        //case 2 : ()
-        ++pos;    // match'('
-        auto r = make_shared<_catch_node>();
-        auto n = re_term();
-        if (n && pos < re.size() && re[pos] == ')') {
-            ++pos;  //match')'
-            r->catchIndex = catchArray.size();
-            catchArray.push_back(vector<wstring>());
-            r->left = n;
-            return r;
-        } else {
+        } else if (pos == re.size() || re[pos] != ')'){
             err();
+            return nullptr;
+        } else {
             return nullptr;
         }
     } else if (pos + 7 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 3] == '<') {
-        //case 3 : (?P<name> )
+        //case 2 : (?P<name> )
         pos += 3;  //match '(?P<'
         auto r = make_shared<_catch_node>(); 
         wstring catchName;
@@ -197,12 +210,31 @@ shared_ptr<_astNode> _ast::charSet_term() {
                 nameMap[catchName] = catchArray.size();
                 catchArray.push_back(vector<wstring>());
                 return r;
-            } else {
+            } else if (pos >= re.size() || re[pos] != ')'){
                 err();
+                return nullptr;
+            } else {
                 return nullptr;
             }
         } else {
             err();
+            return nullptr;
+        }
+    } else if (pos < re.size() && re[pos] == '(') {
+        //case 3 : ()
+        ++pos;    // match'('
+        auto r = make_shared<_catch_node>();
+        auto n = re_term();
+        if (n && pos < re.size() && re[pos] == ')') {
+            ++pos;  //match')'
+            r->catchIndex = catchArray.size();
+            catchArray.push_back(vector<wstring>());
+            r->left = n;
+            return r;
+        } else if (pos >= re.size() || re[pos] != ')') {
+            err();
+            return nullptr;
+        } else {
             return nullptr;
         }
     } else if(pos + 2 < re.size() && re[pos] == '[') {
@@ -210,11 +242,28 @@ shared_ptr<_astNode> _ast::charSet_term() {
             auto r = make_shared<_charSet_node>();
             ++pos; //match '['
             if (pos < re.size() && re[pos] == '\\') {
+                //转义
+                //在[]中可以使用转义关键字
+                //但是不能对捕获进行引用
                 ++pos;
-                switch (pos) {
+                if (pos >= re.size()) {
+                    err();
+                    return nullptr;
+                }
+                if (re[pos] == 'w') {
+                    r->addWordRange();
+                } else if (re[pos] == 'W') {
+                    r->deleteWordRange();
+                } else if (re[pos] == 'd') {
+                    r->addDigitRange();
+                } else if (re[pos] == 'D') {
+                    r->delteDigitRange();
+                } else if (re[pos] == 's') {
+                    r->addSpaceRang();
+                } else if (re[pos] == 'S') {
+                    r->deleteSpaceRange();
                 }
             }
-
 
             //匹配在[]内作为第一个字符的'^'或'-'
             //之后的'^'都表示单个字符，'-'都表示范围，不表示范围的'-'需要转义

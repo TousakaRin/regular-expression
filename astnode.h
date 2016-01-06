@@ -41,6 +41,18 @@ public:
     std::vector<std::pair<wchar_t, wchar_t>> charset;
     void addCharRange(const std::pair<wchar_t, wchar_t>&);
     void addCharRange(std::pair<wchar_t, wchar_t>&&);
+    void addDeleteRange(std::pair<wchar_t, wchar_t>&&);
+    void addDeleteRange(const std::pair<wchar_t, wchar_t>&);
+
+    void addWordRange();
+    void deleteWordRange();
+
+    void addDigitRange();
+    void delteDigitRange();
+
+    void addSpaceRang();
+    void deleteSpaceRange();
+
     void setInversison();
     bool inversion;
 };
@@ -59,10 +71,12 @@ class _cat_node : public _astNode {
 
 /*-----------------------------------------------*/
 class _preRead_node : public _astNode {
-
 //正向预读和反向预读使用同一种节点表示即可
 public:
-    bool flag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
+    _preRead_node(bool);
+    _preRead_node(std::shared_ptr<_astNode>, bool);
+    bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
+    std::shared_ptr<_astNode> dfaTree;
 };
 
 
