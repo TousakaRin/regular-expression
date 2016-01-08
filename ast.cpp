@@ -7,9 +7,9 @@ using namespace std;
 using namespace rgx;
 
 void _ast::err() {
+    cout << "----------------------------------------" << endl;
     cout << "语法错误哟~" << endl;
     cout << "position :  " << pos << endl;
-    //decltype(pos) start = pos > 5 ? pos - 5 : 0, end = pos + 5 <= re.size() ? pos + 5 : re.size();
     if (pos < re.size() - 1) {
         cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1)) << RESET << wstring_to_utf8(re.substr(pos + 1)) << endl;
     } else if (pos < re.size()){
@@ -17,7 +17,7 @@ void _ast::err() {
     } else {
         cout << wstring_to_utf8(re.substr(0, pos));
     }
-  //  wcout << re.substr(start, end - start) << endl;
+    cout << "----------------------------------------" << endl;
 }
 
 _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) {
@@ -32,7 +32,7 @@ _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) {
 
 shared_ptr<_astNode> _ast::re_term() {
     if (pos >= re.size()) {
-        cout << "re_term throws 1" << endl;
+//        cout << "re_term throws 1" << endl;
         err();
         return nullptr;
     } 
@@ -65,7 +65,7 @@ shared_ptr<_astNode> _ast::re_term() {
 
 shared_ptr<_astNode> _ast::or_term() {
     if (pos >= re.size()) {
-        cout << "or_term throws 1" << endl;
+//        cout << "or_term throws 1" << endl;
         err();
         return nullptr;
     }
@@ -177,173 +177,19 @@ shared_ptr<_astNode> _ast::post_read_term() {
 shared_ptr<_astNode> _ast::charSet_term() {
     if (pos + 4 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == ':') {
         //case 1 : (?: ) 
-        pos += 3; // match '(?:'
-        auto r = re_term();  
-        if (r && pos < re.size() && re[pos] == ')') {
-            ++pos;      //match ')'
-            return r;
-        } else if (pos == re.size() || re[pos] != ')'){
-            err();
-            return nullptr;
-        } else {
-            return nullptr;
-        }
+        return normalBracket();
     } else if (pos + 7 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 3] == '<') {
         //case 2 : (?P<name> )
-        pos += 3;  //match '(?P<'
-        auto r = make_shared<_catch_node>(); 
-        wstring catchName;
-        while (pos < re.size() && re[pos] != '>') {
-            if (re[pos] == '\\') {
-                ++pos;
-            } 
-            catchName.push_back(re[pos]);
-            ++pos;
-        }    // match'name'
-        if (pos < re.size()) {
-            ++pos;  //match '>'
-            auto n = re_term();
-            if (n && pos < re.size() && re[pos] == ')') {
-                ++pos;    //match ')'
-                r->left = n;
-                r->catchIndex = catchArray.size();
-                nameMap[catchName] = catchArray.size();
-                catchArray.push_back(vector<wstring>());
-                return r;
-            } else if (pos >= re.size() || re[pos] != ')'){
-                err();
-                return nullptr;
-            } else {
-                return nullptr;
-            }
-        } else {
-            err();
-            return nullptr;
-        }
+        return namedCatch();
     } else if (pos < re.size() && re[pos] == '(') {
         //case 3 : ()
-        ++pos;    // match'('
-        auto r = make_shared<_catch_node>();
-        auto n = re_term();
-        if (n && pos < re.size() && re[pos] == ')') {
-            ++pos;  //match')'
-            r->catchIndex = catchArray.size();
-            catchArray.push_back(vector<wstring>());
-            r->left = n;
-            return r;
-        } else if (pos >= re.size() || re[pos] != ')') {
-            err();
-            return nullptr;
-        } else {
-            return nullptr;
-        }
+        return unnamedCatch();
     } else if(pos + 2 < re.size() && re[pos] == '[') {
-            //case 4 : [^-a-bf-i]
-            auto r = make_shared<_charSet_node>();
-            ++pos; //match '['
-            if (pos < re.size() && re[pos] == '\\') {
-                //转义
-                //在[]中可以使用转义关键字
-                //但是不能对捕获进行引用
-                ++pos;
-                if (pos >= re.size()) {
-                    err();
-                    return nullptr;
-                }
-                if (re[pos] == 'w') {
-                    r->addWordRange();
-                } else if (re[pos] == 'W') {
-                    r->deleteWordRange();
-                } else if (re[pos] == 'd') {
-                    r->addDigitRange();
-                } else if (re[pos] == 'D') {
-                    r->delteDigitRange();
-                } else if (re[pos] == 's') {
-                    r->addSpaceRang();
-                } else if (re[pos] == 'S') {
-                    r->deleteSpaceRange();
-                }
-            }
-
-            //匹配在[]内作为第一个字符的'^'或'-'
-            //之后的'^'都表示单个字符，'-'都表示范围，不表示范围的'-'需要转义
-            if (pos < re.size() && re[pos] == '^') {
-                r->setInversison();
-                ++pos;  //match '^' : '[^'
-            } 
-            while(pos < re.size() && re[pos] != ']') {
-                auto pre = re[pos];
-                ++pos;  
-                if (pos < re.size() && re[pos] == '-') {
-                    ++pos;
-                    r->addCharRange(pair<wchar_t, wchar_t>(pre, re[pos]));
-                    ++pos;
-                } else if (pos >= re.size()) {
-                    err();
-                    return nullptr;
-                } else {
-                    r->addCharRange(pair<wchar_t, wchar_t>(pre, pre));
-                }
-            }
-            if (pos < re.size() && re[pos] == ']') {
-                ++pos;
-                return r;
-            } else {
-                err();
-                return nullptr;
-            }
+        //case 4 : [^-a-bf-i]
+        return charClass();
     } else if (pos < re.size() && pos == '\\') {
         //case 5 : \xxx
-        ++pos;
-        int n = -1;
-        if (pos >= re.size()) {
-            err();
-            return nullptr;
-        }
-
-        if (!isKeyword(pos) && (n = getNum()) < 0) {
-            err();
-            return nullptr;
-        } else if (isKeyword(pos)) { 
-            // \?..\+  and so on
-            return make_shared<_charSet_node>(re[pos]);
-        } else if (n >= 0 && static_cast<unsigned int>(n) < catchArray.size()) {
-            // \1, \2 unnamed reference
-            auto r = make_shared<_reference_node>(n);
-            return r;
-        } else if (re[pos] == '<') {
-            // \<woca> named reference
-            wstring name;
-            while (pos < re.size() && re[pos] != '>') {
-                if (re[pos] == '\\') {
-                    ++pos;
-                    if (pos >= re.size()) {
-                        err();
-                    }
-                }
-                name.push_back(re[pos]);
-                ++pos;
-            }
-            if (pos < re.size() && re[pos] == '>') {
-                if (nameMap.find(name) != nameMap.end()) {
-                    ++pos;
-                    auto r = make_shared<_reference_node>(nameMap[name]);
-                    return r;
-                } else {
-                    //reference not found
-                    err();
-                    return nullptr;
-                }
-            } else {
-                err();
-                return nullptr;
-            }
-        } else if (re[pos] == 'w' || re[pos] == 'W' || re[pos] == 's' || re[pos] == 'S' || re[pos] == 'd' || re[pos] == 'D') {
-            return make_shared<_charSet_node>('s');
-        } else {
-            err();
-            return nullptr;
-        }
+        return normalTrans();
     } else {
         // single char
         auto r = make_shared<_charSet_node>(re[pos]);
@@ -426,13 +272,183 @@ _ast::~_ast() {
 }
 
 
-bool _ast::isKeyword(wstring::size_type pos) {
-    for (auto w : _keyword) {
-        if (w == re[pos]) {
-            return true;
+bool _ast::charSetTrans(shared_ptr<_charSet_node> r) {
+    /* 处理字符类中的转义
+    *  单个的'/',以及无效的转义都会被当成语法错误
+    *  在字符类中除'/', 在开头的'^', 不在开头的'-'之外的关键字全部失去意义，仅仅表示该字符
+    *  即所有的'/'，所有在开头的'^', 不在开头的'-'都需要转义
+    *  转义字符'/'用于使用预定义字符类'/s' ,'/S'...以及表示'//', '/^', '/-'
+    *  在字符类中无法使用具名/匿名引用，因为关键字已经失去意义                              
+    */
+    ++pos;
+    if (pos >= re.size()) {
+        err();
+        return false;
+    }
+    if (re[pos] == 'w') {
+        r->addWordRange();
+    } else if (re[pos] == 'W') {
+        r->deleteWordRange();
+    } else if (re[pos] == 'd') {
+        r->addDigitRange();
+    } else if (re[pos] == 'D') {
+        r->delteDigitRange();
+    } else if (re[pos] == 's') {
+        r->addSpaceRang();
+    } else if (re[pos] == 'S') {
+        r->deleteSpaceRange();
+    } else if (re[pos] == '\\') {
+        r->addCharRange(pair<wchar_t, wchar_t>('\\', '\\' + 1));
+    }
+    return true;
+}
+
+shared_ptr<_astNode> _ast::normalBracket() {
+    // 在函数调用之前检查前缀是否为(?:,  函数内部不再检查前缀
+    pos += 3; // match '(?:'
+    auto r = re_term();  
+    if (r && pos < re.size() && re[pos] == ')') {
+        ++pos;      //match ')'
+        return r;
+    } else if (pos == re.size() || re[pos] != ')'){
+        err();
+        return nullptr;
+    } else {
+        return nullptr;   //只在发现错误字符时报错，否则交给下级函数报错
+                         // 即r == nullptr时，由re_term()函数报错
+    }
+}
+
+
+shared_ptr<_astNode> _ast::namedCatch() {
+   // 在函数调用之前检查前缀是否为 (?P< ,  函数内部不再检查前缀
+    pos += 3;  //match '(?P<'
+    auto r = make_shared<_catch_node>(); 
+    wstring catchName;
+    while (pos < re.size() && re[pos] != '>') {
+        if (re[pos] == '\\') {
+            ++pos;
+        } 
+        catchName.push_back(re[pos]);
+        ++pos;
+    }    // match'name'
+    if (pos < re.size()) {
+        ++pos;  //match '>'
+        auto n = re_term();
+        if (n && pos < re.size() && re[pos] == ')') {
+            ++pos;    //match ')'
+            r->left = n;
+            r->catchIndex = catchArray.size();
+            nameMap[catchName] = catchArray.size();
+            catchArray.push_back(vector<wstring>());
+            return r;
+        } else if (pos >= re.size() || re[pos] != ')'){
+            err();
+            return nullptr;
+        } else {
+            return nullptr;
+        }
+    } else {
+        err();
+        return nullptr;
+    }
+}
+
+shared_ptr<_astNode> _ast::unnamedCatch() {
+    //进入函数之前判断前缀是(,并且不是(?
+    ++pos;    // match'('
+    auto r = make_shared<_catch_node>();
+    auto n = re_term();
+    if (n && pos < re.size() && re[pos] == ')') {
+        ++pos;  //match')'
+        r->catchIndex = catchArray.size();
+        catchArray.push_back(vector<wstring>());
+        r->left = n;
+        return r;
+    } else if (pos >= re.size() || re[pos] != ')') {
+        err();
+        return nullptr;
+    } else {
+        return nullptr;
+    }
+}
+
+shared_ptr<_astNode> _ast::charClass() {
+    //进入函数之前判断前缀
+    auto r = make_shared<_charSet_node>();
+    ++pos; //match '['
+
+    //匹配在[]内作为第一个字符的'^'或'-'
+    //之后的'^'都表示单个字符，'-'都表示范围，不表示范围的'-'需要转义
+    if (pos < re.size() && re[pos] == '^') {
+        r->setInversison();
+        ++pos;  //match '^' : '[^'
+    } 
+    while(pos < re.size() && re[pos] != ']') {
+        auto pre = re[pos];
+        ++pos;  
+        if (pos < re.size() && re[pos] == '\\') {
+           //处理转义字符，字符类中的转义字符和字符类之外的转义处理不同 
+            if (!charSetTrans(r)) {
+                return nullptr;
+            }
+        }
+        if (pos < re.size() && re[pos] == '-') {
+            ++pos;
+            r->addCharRange(pair<wchar_t, wchar_t>(pre, re[pos]));
+            ++pos;
+            return r;
+        } else if (pos >= re.size()) {
+            err();
+            return nullptr;
+        } else {
+            r->addCharRange(pair<wchar_t, wchar_t>(pre, pre));
         }
     }
-    return false;
+    if (pos < re.size() && re[pos] == ']') {
+        ++pos;
+        return r;
+    } else {
+        err();
+        return nullptr;
+    }
+}
+
+shared_ptr<_astNode> _ast::normalTrans() {
+    // 进入函数之前判断前缀
+    ++pos;           //match '\'
+    auto r = make_shared<_charSet_node>();
+    if (pos >= re.size()) {
+        err();
+        return nullptr;
+    } else {
+        // 检查转义是否有意义
+        bool check = false;
+        for (auto w : _normalTrans_set) {
+            check = (w == re[pos]);
+        }
+        if (!check) {
+            err();
+            return nullptr;
+        }
+    }
+    if (re[pos] == 'w') {
+        r->addWordRange(); 
+    } else if (re[pos] == 'W') {
+        r->deleteWordRange();
+    } else if (re[pos] == 'd') {
+        r->addDigitRange();
+    } else if (re[pos] == 'D') {
+        r->delteDigitRange();
+    } else if (re[pos] == 's') {
+        r->addSpaceRang();
+    } else if (re[pos] == 'S') {
+        r->deleteSpaceRange();
+    } else {
+        r->addCharRange(pair<wchar_t, wchar_t>(re[pos], re[pos]));
+    }
+    ++pos;  // match tranChar
+    return r;
 }
 
 int _ast::getNum() {
@@ -453,6 +469,6 @@ int _ast::getNum() {
 
 wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
 
-wchar_t _ast::_keyword[] = {'{', '}', '(', ')', '[', ']', '|', '+', '*', '?', '\\', '!', '-', '^'};
+wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D'};
 
 
