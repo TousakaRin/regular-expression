@@ -26,15 +26,15 @@ private:
     std::shared_ptr<_astNode> pre_read_term();
     std::shared_ptr<_astNode> post_read_term();
     std::shared_ptr<_astNode> charSet_term();             
-    std::shared_ptr<_astNode> normalBracket();            //普通括号    (?:)
-    std::shared_ptr<_astNode> namedCatch();               //具名捕获    (?P<name>)
-    std::shared_ptr<_astNode> unnamedCatch();             //匿名捕获    ()
-    std::shared_ptr<_astNode> namedReference();           //具名引用    (?P=name)
-    std::shared_ptr<_astNode> unnamedReference();         //匿名引用    \index
-    std::shared_ptr<_astNode> normalTrans();              //常规转义    \s,\?,\+
-    std::shared_ptr<_astNode> charClass();                //字符类      [^xxx] | [xxx]
-    std::shared_ptr<_numCount_node> num_term();           //数量单位    ?, ??, +, +?....
-    bool charSetTrans(std::shared_ptr<_charSet_node>);    //处理字符类中的预定义字符类 /w,/W,/s,/S,/d,/D
+    std::shared_ptr<_astNode> normalBracket();                        //普通括号    (?:)
+    std::shared_ptr<_astNode> namedCatch();                           //具名捕获    (?P<name>)
+    std::shared_ptr<_astNode> unnamedCatch();                         //匿名捕获    ()
+    std::shared_ptr<_astNode> namedReference(const std::wstring &);   //具名引用    (?P=name)
+    std::shared_ptr<_astNode> unnamedReference(unsigned int);         //匿名引用    \index
+    std::shared_ptr<_astNode> normalTrans();                          //常规转义    \s,\?,\+
+    std::shared_ptr<_astNode> charClass();                            //字符类      [^xxx] | [xxx]
+    std::shared_ptr<_numCount_node> num_term();                       //数量单位    ?, ??, +, +?....
+    bool charSetTrans(std::shared_ptr<_charSet_node>);                //处理字符类中的预定义字符类 /w,/W,/s,/S,/d,/D
     void err();
 
     bool isKeyword(std::wstring::size_type);
@@ -42,8 +42,9 @@ private:
 private:
     static wchar_t _cat_start_mask[8];    //不能出现在cat_term开头的字符
     static wchar_t _normalTrans_set[17];    //能够出现在转义字符后面的关键字(在字符类中的转义字符另外处理)
-    std::vector<std::vector<std::wstring> > catchArray;
+
     std::map<std::wstring, unsigned int> nameMap; 
+    unsigned int catchNum;
 };
 
 }

@@ -20,7 +20,7 @@ void _ast::err() {
     cout << "----------------------------------------" << endl;
 }
 
-_ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) {
+_ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) , catchNum(0) {
     root = re_term();
     if (pos != re.size()) {
         // 虽然re不用到达正则末尾，但是这里必须到达末尾，否则正则就是非法的
@@ -181,14 +181,31 @@ shared_ptr<_astNode> _ast::charSet_term() {
     } else if (pos + 7 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 3] == '<') {
         //case 2 : (?P<name> )
         return namedCatch();
+    } else if (pos + 5 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 2] == '=') {
+        //case 3 : (?P=name)
+        pos += 4;   //match '(?P='
+        wstring name;
+        while (pos < re.size() && re[pos] != ')') {
+            if (re[pos] == '\\') {
+                ++pos;
+            }
+            name.push_back(re[pos]);
+        }
+        if (pos == re.size()) {
+            err();
+            return nullptr;
+        }
+        ++pos;  //match ')'
+        return namedReference(name);
+
     } else if (pos < re.size() && re[pos] == '(') {
-        //case 3 : ()
+        //case 4 : ()
         return unnamedCatch();
     } else if(pos + 2 < re.size() && re[pos] == '[') {
-        //case 4 : [^-a-bf-i]
+        //case 5 : [^-a-bf-i]
         return charClass();
     } else if (pos < re.size() && pos == '\\') {
-        //case 5 : \xxx
+        //case 6 : \xxx
         return normalTrans();
     } else {
         // single char
@@ -338,9 +355,8 @@ shared_ptr<_astNode> _ast::namedCatch() {
         if (n && pos < re.size() && re[pos] == ')') {
             ++pos;    //match ')'
             r->left = n;
-            r->catchIndex = catchArray.size();
-            nameMap[catchName] = catchArray.size();
-            catchArray.push_back(vector<wstring>());
+            r->catchIndex = ++catchNum;
+            nameMap[catchName] = catchNum;
             return r;
         } else if (pos >= re.size() || re[pos] != ')'){
             err();
@@ -361,8 +377,7 @@ shared_ptr<_astNode> _ast::unnamedCatch() {
     auto n = re_term();
     if (n && pos < re.size() && re[pos] == ')') {
         ++pos;  //match')'
-        r->catchIndex = catchArray.size();
-        catchArray.push_back(vector<wstring>());
+        r->catchIndex = ++catchNum;
         r->left = n;
         return r;
     } else if (pos >= re.size() || re[pos] != ')') {
@@ -421,16 +436,22 @@ shared_ptr<_astNode> _ast::normalTrans() {
     if (pos >= re.size()) {
         err();
         return nullptr;
-    } else {
-        // 检查转义是否有意义
-        bool check = false;
-        for (auto w : _normalTrans_set) {
-            check = (w == re[pos]);
-        }
-        if (!check) {
-            err();
-            return nullptr;
-        }
+    } 
+
+    // 检查转义是否有意义
+    bool check = false;
+    for (auto w : _normalTrans_set) {
+        check = (w == re[pos]);
+    }
+    int n = getNum();
+    if (!check && n < 0) {
+        err();
+        return nullptr;
+    }
+
+
+    if (n >= 0) {
+        return unnamedReference(n);
     }
     if (re[pos] == 'w') {
         r->addWordRange(); 
@@ -452,6 +473,7 @@ shared_ptr<_astNode> _ast::normalTrans() {
 }
 
 int _ast::getNum() {
+    //正则表达式中不会出现需要提取的、负的整数
     if (pos >= re.size()) {
         return -1;
     }
@@ -465,6 +487,22 @@ int _ast::getNum() {
         ++pos;
     }
     return sum;
+}
+
+shared_ptr<_astNode> _ast::unnamedReference(unsigned int index) {
+    if (index > catchNum) {
+        err();
+        return nullptr;
+    }
+    return make_shared<_reference_node>(index);
+}
+
+shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
+    if (nameMap.find(name) == nameMap.end()) {
+        err();
+        return nullptr;
+    }
+    return make_shared<_reference_node>(nameMap[name]);
 }
 
 wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
