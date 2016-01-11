@@ -7,51 +7,43 @@ using namespace std;
 using namespace rgx;
 
 void _ast::err() {
-    cout << "----------------------------------------" << endl;
+    cout << "-------------------------------------------------" << endl;
     cout << "语法错误哟~" << endl;
     cout << "position :  " << pos << endl;
     if (pos < re.size() - 1) {
         cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1)) << RESET << wstring_to_utf8(re.substr(pos + 1)) << endl;
     } else if (pos < re.size()){
-        cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1));
+        cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1)) << RESET << endl;
     } else {
-        cout << wstring_to_utf8(re.substr(0, pos));
+        cout << wstring_to_utf8(re.substr(0, pos)) << endl;
     }
-    cout << "----------------------------------------" << endl;
+    cout << "-------------------------------------------------" << endl;
 }
 
 _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) , catchNum(0) {
     root = re_term();
-    if (pos != re.size()) {
-        // 虽然re不用到达正则末尾，但是这里必须到达末尾，否则正则就是非法的
-//        cout <<  "_ast throws" << endl;
-//        err();
-        root = nullptr;
-    }
+    // 当root为nullptr时，必然会在出现错误的地方报错，这里不需要再报错，也无需其他错误处理
 }
 
 shared_ptr<_astNode> _ast::re_term() {
-    if (pos >= re.size()) {
-//        cout << "re_term throws 1" << endl;
-        err();
-        return nullptr;
-    } 
+    //re_term 可以为空
     auto r = or_term();         //r 始终为子树的根节点
     while (pos < re.size() && re[pos] == '|') {
         ++pos;           // match '|'
         if (pos >= re.size()) {
-            cout << "re_term throws 2" << endl;
             err();
             return nullptr;
         }
         auto n = or_term();
+        // 出现'|' 之后，下一个必须是非空的or_term
         if (n) {
             auto newRoot = make_shared<_or_node>();
             newRoot->left = r;
             newRoot->right = n;
             r = newRoot;
         } else {
-            //err
+            // or_term 是可以正常为空的，所以需要在这里报错
+            err();
             return nullptr;
         }
     }
@@ -64,11 +56,7 @@ shared_ptr<_astNode> _ast::re_term() {
 }
 
 shared_ptr<_astNode> _ast::or_term() {
-    if (pos >= re.size()) {
-//        cout << "or_term throws 1" << endl;
-        err();
-        return nullptr;
-    }
+    // or_term 可以为空 or_term -> cat_term -> null
     auto r = cat_term(); 
     while (pos < re.size()) {
         for (auto c : _cat_start_mask) {
@@ -84,8 +72,7 @@ shared_ptr<_astNode> _ast::or_term() {
             newRoot->right = n;
             r = newRoot;
         } else {
-//            cout << "or_term throws 2" << endl;
-//            err();
+            //只有直接遇到错误字符的地方才需要报错
             return nullptr;
         }
     } 
@@ -99,12 +86,16 @@ shared_ptr<_astNode> _ast::cat_term() {
     }
     auto pre = pre_read_term();
     auto r = charSet_term();
-    if (!r) {
+    if (!r && pre) {
+        err();
+        return nullptr;
+    } else if (!r) {
         return nullptr;
     }
     auto numt = num_term();
     auto post = post_read_term();
     if (numt) {
+        // numt 必不为空，即使表达式中没有num_term, num_term()方法也回返回一个_numCount_node
         r->numCount = numt;
         r->pre_read = pre; 
         r->post_read = post;
@@ -133,6 +124,7 @@ shared_ptr<_astNode> _ast::pre_read_term() {
             err();
             return nullptr;
         } else if (!n) {
+            //错误会再re_term()中处理
             return nullptr;
         } else {
             // 此处应该永远不可达，因为 n, pos < re.size(), re[pos] 都已经全部测试过了
@@ -140,6 +132,7 @@ shared_ptr<_astNode> _ast::pre_read_term() {
             return nullptr;
         }
     } else {
+        //由于pre_read可以为空，所以前缀不满足或者长度不够时，直接return nullptr，不报错
         return nullptr;
     }
 }
@@ -175,6 +168,21 @@ shared_ptr<_astNode> _ast::post_read_term() {
 }
 
 shared_ptr<_astNode> _ast::charSet_term() {
+    if (pos >= re.size()) {
+        // charSet_term 可以为空
+        return nullptr;
+    }
+    bool check = true;
+    for (auto w : _charSet_mask) {
+        if (re[pos] == w) {
+            check = false;
+        }
+    }
+    if (!check) {
+        err();
+        return nullptr;
+    }
+
     if (pos + 4 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == ':') {
         //case 1 : (?: ) 
         return normalBracket();
@@ -209,6 +217,14 @@ shared_ptr<_astNode> _ast::charSet_term() {
         return normalTrans();
     } else {
         // single char
+        // 处理'.', '.'出现在字符类中时，不具备特殊意义，所以只要在这里处理'.'
+        if (re[pos] == '.') {
+            auto  r = make_shared<_charSet_node>();
+            r->setInversison();
+            r->addCharRange(pair<wchar_t, wchar_t>(re[pos], re[pos]));
+            ++pos;
+            return r;
+        }
         auto r = make_shared<_charSet_node>(re[pos]);
         ++pos;
         return r;
@@ -339,14 +355,13 @@ shared_ptr<_astNode> _ast::normalBracket() {
 
 shared_ptr<_astNode> _ast::namedCatch() {
    // 在函数调用之前检查前缀是否为 (?P< ,  函数内部不再检查前缀
-    pos += 3;  //match '(?P<'
+    pos += 4;  //match '(?P<'
     auto r = make_shared<_catch_node>(); 
-    wstring catchName;
     while (pos < re.size() && re[pos] != '>') {
         if (re[pos] == '\\') {
             ++pos;
         } 
-        catchName.push_back(re[pos]);
+        r->name.push_back(re[pos]);
         ++pos;
     }    // match'name'
     if (pos < re.size()) {
@@ -356,7 +371,7 @@ shared_ptr<_astNode> _ast::namedCatch() {
             ++pos;    //match ')'
             r->left = n;
             r->catchIndex = ++catchNum;
-            nameMap[catchName] = catchNum;
+            nameMap[r->name] = catchNum;
             return r;
         } else if (pos >= re.size() || re[pos] != ')'){
             err();
@@ -482,8 +497,8 @@ int _ast::getNum() {
     }
     int sum = 0;
     while (pos < re.size() && re[pos] >= '0' && re[pos] <= '9') {
-        sum += re[pos] - '0';
         sum *= 10;
+        sum += re[pos] - '0';
         ++pos;
     }
     return sum;
@@ -505,8 +520,9 @@ shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
     return make_shared<_reference_node>(nameMap[name]);
 }
 
+
 wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
 
 wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D'};
 
-
+wchar_t _ast::_charSet_mask[] = {'{', '}', '?', '*', '+', '|'};

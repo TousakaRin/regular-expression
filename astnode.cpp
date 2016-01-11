@@ -12,18 +12,18 @@ _astNode::~_astNode() {
 
 string _astNode::toString() {
     string info;
-    info += " _astNode ";
+    info += " astnode \n";
     if (pre_read) {
         info += " pre_read ";
     }
     if (post_read) {
-        info += " pos_resd ";
+        info += " pos_resd \n";
     }
     if (numCount) {
         info += string(" numCount ") + 
             " lower : "  + int2string(numCount->lower) + 
-            " upper : " + int2string(numCount->upper) +
-            " greedy : " + bool2string(numCount->greedy);
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
         info += " errrrrrrror  no numCount found ";
     }
@@ -34,18 +34,18 @@ string _astNode::toString() {
 /*-----------------------------------------------*/
 string _or_node::toString() {
     string info;
-    info += " or_node ";
+    info += " or_node \n";
     if (pre_read) {
         info += " pre_read ";
     }
     if (post_read) {
-        info += " pos_resd ";
+        info += " pos_resd \n";
     }
     if (numCount) {
         info += string(" numCount ") + 
             " lower : "  + int2string(numCount->lower) + 
-            " upper : " + int2string(numCount->upper) +
-            " greedy : " + bool2string(numCount->greedy);
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
         info += " errrrrrrror  no numCount found ";
     }
@@ -132,6 +132,23 @@ void _charSet_node::delteDigitRange() {
 }
 
 
+string _charSet_node::toString() {
+    string info; 
+    info += " _charSet_node \n";
+    info += "inversion :" + bool2string(inversion) + "\n";
+    for (auto p : charset) {
+        wstring ws;
+        ws.push_back(p.first);
+        ws.push_back(' ');
+        ws.push_back(p.second);
+        ws.push_back('\n');
+        info += wstring_to_utf8(ws);
+     }
+
+     info += "\n\n";
+     return info; 
+}
+
 /*-----------------------------------------------*/
 
 _preRead_node::_preRead_node(bool tag) : pattern_tag(tag), dfaTree(nullptr) {
@@ -143,13 +160,27 @@ _preRead_node::_preRead_node(shared_ptr<_astNode> reTerm, bool tag) : pattern_ta
 } 
 
 
+string _preRead_node::toString() {
+    string info;
+    info += " _preRead_node ";
+    return info;
+}
+
 /*-----------------------------------------------*/
 
 _reference_node::_reference_node(unsigned int id) : index(id) {
-
+    
 }
 
-
+string _reference_node::toString() {
+    string info;
+    info += " _reference_node ";
+    info += " reference index : " + int2string(index);
+    if (name.size() != 0) {
+        info += " reference name : " + wstring_to_utf8(name);
+    }
+    return info;
+}
 
 /*-----------------------------------------------*/
 
@@ -163,4 +194,35 @@ _numCount_node::_numCount_node(int l, int u) : greedy(true), lower(l), upper(u) 
 
 _numCount_node::_numCount_node(int l, int u, bool g) : greedy(g), lower(l), upper(u) {
 
+}
+
+string _numCount_node::toString() {
+   string info; 
+   info += " _numCount_node \n";
+   info += " greedy : " + bool2string(greedy);
+   info += " range " + int2string(lower) + " " + int2string(upper);
+   info += "/n";
+   return info;
+}
+
+
+
+/*-----------------------------------------------*/
+
+string _catch_node::toString() {
+    string info;
+    info += " _catch_node \n";
+    info += " catchIndex : " + int2string(catchIndex) + "\n";
+    info += " catchName : " + wstring_to_utf8(name);
+    info += "\n\n";
+    return info;
+}
+
+
+
+/*-----------------------------------------------*/
+string _cat_node::toString() {
+    string info;
+    info += " _cat_node \n\n";
+    return info;
 }

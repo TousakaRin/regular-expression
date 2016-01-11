@@ -9,8 +9,11 @@
 
 namespace rgx {
 
+class _ast;
+void astTraversal(const _ast&);
 
 class _ast {
+    friend void rgx::astTraversal(const _ast&);
 public:
     enum {build_to_dfa, build_to_nfa} build_type;
     _ast(const std::wstring &regular_expression);
@@ -42,6 +45,7 @@ private:
 private:
     static wchar_t _cat_start_mask[8];    //不能出现在cat_term开头的字符
     static wchar_t _normalTrans_set[17];    //能够出现在转义字符后面的关键字(在字符类中的转义字符另外处理)
+    static wchar_t _charSet_mask[6];
 
     std::map<std::wstring, unsigned int> nameMap; 
     unsigned int catchNum;

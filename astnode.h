@@ -55,6 +55,8 @@ public:
 
     void setInversison();
     bool inversion;
+
+    virtual std::string toString();
 };
 
 
@@ -62,7 +64,8 @@ public:
 
 /*-----------------------------------------------*/
 class _cat_node : public _astNode {
-
+public:
+    virtual std::string toString();
 };
 
 
@@ -77,6 +80,7 @@ public:
     _preRead_node(std::shared_ptr<_astNode>, bool);
     bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
     std::shared_ptr<_astNode> dfaTree;
+    virtual std::string toString();
 };
 
 
@@ -87,7 +91,8 @@ public:
 class _catch_node : public _astNode {
 public:    
     unsigned int catchIndex;
-    std::shared_ptr<std::wstring> name;
+    std::wstring name;
+    virtual std::string toString();
 };
 
 
@@ -100,6 +105,7 @@ public:
     std::wstring name;
     unsigned int index;
     _reference_node(unsigned int);
+    virtual std::string toString();
 };
 
 
@@ -116,6 +122,7 @@ public:
     _numCount_node(int, int, bool);
     bool greedy;
     int lower, upper;
+    virtual std::string toString();
 };
 
 

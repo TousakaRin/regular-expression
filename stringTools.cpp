@@ -2,6 +2,7 @@
 #include <codecvt>
 #include <algorithm>
 #include <locale>
+#include <iostream>
 
 using namespace rgx;
 using namespace std;
@@ -37,7 +38,7 @@ string rgx::int2string(int i) {
     }
     string tmp;
     while(i != 0) {
-        tmp.push_back(i % 10);
+        tmp.push_back(i % 10 + '0');
         i /= 10;
     }
     reverse(tmp.begin(), tmp.end());

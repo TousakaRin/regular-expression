@@ -18,11 +18,17 @@ public:
 class dfa_pattern : public pattern {
 public:
     dfa_pattern (const _ast&);
+    virtual std::shared_ptr<matchObj> match(const std::wstring&);
+    virtual std::shared_ptr<matchObj> search(const std::wstring&);
+    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::wstring&);
 };
 
 class nfa_pattern : public pattern {
 public:
-   nfa_pattern (const _ast&); 
+    nfa_pattern (const _ast&); 
+    virtual std::shared_ptr<matchObj> match(const std::wstring&);
+    virtual std::shared_ptr<matchObj> search(const std::wstring&);
+    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::wstring&);
 };
 
 }
