@@ -288,3 +288,22 @@ string _cat_node::toString() {
     }
     return info;
 }
+
+
+
+/*-----------------------------------------------*/
+_position_node::_position_node(position_type p) : position(p) {
+}
+
+string _position_node::toString() {
+    string info;
+    info += " _position_node \n";
+    info += " position : ";
+    if (position == lineBegin) {
+        info += " lineBegin ";
+    } else {
+        info += " lineEnd ";
+    }
+    info += "\n\n";
+    return info;
+}

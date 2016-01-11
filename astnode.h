@@ -128,6 +128,15 @@ public:
 };
 
 
+/*-----------------------------------------------*/
+
+
+class _position_node {
+public:
+    enum position_type {lineBegin, lineEnd} position;
+    _position_node(position_type);
+    std::string toString();
+};
 
 
 }
