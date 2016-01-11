@@ -4,7 +4,7 @@ flag = -std=c++11 -Wall -g
 test : $(objects)
 	g++-5 -o test $(flag) $(objects) 
 
-main.o : ast.h astnode.h \
+main.o : ast.h astnode.h stringTools.h\
 	main.cpp
 	g++-5 -c $(flag) main.cpp
 

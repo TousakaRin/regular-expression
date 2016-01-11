@@ -9,9 +9,10 @@ namespace rgx {
 
 /*-----------------------------------------------*/
 class _numCount_node;
+class _preRead_node;
 class _astNode {
 public:
-    std::shared_ptr<_astNode> pre_read, post_read;
+    std::shared_ptr<_preRead_node> pre_read, post_read;
     std::shared_ptr<_astNode> left, right;
     std::shared_ptr<_numCount_node> numCount;
     virtual std::string toString();
@@ -73,14 +74,14 @@ public:
 
 
 /*-----------------------------------------------*/
-class _preRead_node : public _astNode {
+class _preRead_node {
 //正向预读和反向预读使用同一种节点表示即可
 public:
     _preRead_node(bool);
     _preRead_node(std::shared_ptr<_astNode>, bool);
     bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
     std::shared_ptr<_astNode> dfaTree;
-    virtual std::string toString();
+    std::string toString();
 };
 
 

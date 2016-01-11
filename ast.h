@@ -26,8 +26,8 @@ private:
     std::shared_ptr<_astNode> or_term();
     std::shared_ptr<_astNode> re_term();
     std::shared_ptr<_astNode> cat_term();
-    std::shared_ptr<_astNode> pre_read_term();
-    std::shared_ptr<_astNode> post_read_term();
+    std::shared_ptr<_preRead_node> pre_read_term();
+    std::shared_ptr<_preRead_node> post_read_term();
     std::shared_ptr<_astNode> charSet_term();             
     std::shared_ptr<_astNode> normalBracket();                        //普通括号    (?:)
     std::shared_ptr<_astNode> namedCatch();                           //具名捕获    (?P<name>)

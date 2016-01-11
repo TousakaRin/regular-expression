@@ -20,12 +20,12 @@ string _astNode::toString() {
         info += " pos_resd \n";
     }
     if (numCount) {
-        info += string(" numCount ") + 
+        info += string(" numCount \n") + 
             " lower : "  + int2string(numCount->lower) + 
                 " upper : " + int2string(numCount->upper) +
             "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
-        info += " errrrrrrror  no numCount found ";
+        info += " errrrrrrror  no numCount found \n\n";
     }
     return info;
 }
@@ -42,12 +42,12 @@ string _or_node::toString() {
         info += " pos_resd \n";
     }
     if (numCount) {
-        info += string(" numCount ") + 
+        info += string(" numCount \n") + 
             " lower : "  + int2string(numCount->lower) + 
                 " upper : " + int2string(numCount->upper) +
             "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
-        info += " errrrrrrror  no numCount found ";
+        info += " errrrrrrror  no numCount found \n\n";
     }
     return info;
 }
@@ -135,7 +135,22 @@ void _charSet_node::delteDigitRange() {
 string _charSet_node::toString() {
     string info; 
     info += " _charSet_node \n";
-    info += "inversion :" + bool2string(inversion) + "\n";
+    info += " inversion : " + bool2string(inversion) + "\n";
+    if (pre_read) {
+        info += " pre_read ";
+    }
+    if (post_read) {
+        info += " pos_resd \n";
+    }
+    if (numCount) {
+        info += string(" numCount \n") + 
+            " lower : "  + int2string(numCount->lower) + 
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+    } else {
+        info += " errrrrrrror  no numCount found \n\n";
+    }
+
     for (auto p : charset) {
         wstring ws;
         ws.push_back(p.first);
@@ -179,6 +194,20 @@ _reference_node::_reference_node(unsigned int id, const wstring& n) : name(n), i
 string _reference_node::toString() {
     string info;
     info += " _reference_node \n";
+    if (pre_read) {
+        info += " pre_read ";
+    }
+    if (post_read) {
+        info += " pos_resd \n";
+    }
+    if (numCount) {
+        info += string(" numCount \n") + 
+            " lower : "  + int2string(numCount->lower) + 
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+    } else {
+        info += " errrrrrrror  no numCount found \n\n";
+    }
     info += " reference index : " + int2string(index) + "\n";
     if (name.size() != 0) {
         info += " reference name : " + wstring_to_utf8(name);
@@ -216,6 +245,20 @@ string _numCount_node::toString() {
 
 string _catch_node::toString() {
     string info;
+    if (pre_read) {
+        info += " pre_read ";
+    }
+    if (post_read) {
+        info += " pos_resd \n";
+    }
+    if (numCount) {
+        info += string(" numCount ") + 
+            " lower : "  + int2string(numCount->lower) + 
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+    } else {
+        info += " errrrrrrror  no numCount found \n\n";
+    }
     info += " _catch_node \n";
     info += " catchIndex : " + int2string(catchIndex) + "\n";
     info += " catchName : " + wstring_to_utf8(name);
@@ -229,5 +272,19 @@ string _catch_node::toString() {
 string _cat_node::toString() {
     string info;
     info += " _cat_node \n\n";
+    if (pre_read) {
+        info += " pre_read ";
+    }
+    if (post_read) {
+        info += " pos_resd \n";
+    }
+    if (numCount) {
+        info += string(" numCount \n") + 
+            " lower : "  + int2string(numCount->lower) + 
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+    } else {
+        info += " errrrrrrror  no numCount found \n\n";
+    }
     return info;
 }

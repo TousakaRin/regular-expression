@@ -48,10 +48,14 @@ shared_ptr<_astNode> _ast::re_term() {
         }
     }
     /*
-     即使是re_term也可以不到达字符串末尾啊！！！
-     因为在处理小括号时直接调用re_term处理了- -
-     比如abc(ef|cd)ghi
+     * 若re_term()没有到达字符串末尾，只有一种情况
+     * re被用来处理小括号了，如(?P<name> ) / ()
+     * 否则就是出错了！！！
     */
+    if (pos < re.size() && re[pos] != ')') {
+        err();
+        return nullptr;
+    }
     return r;
 }
 
@@ -105,7 +109,7 @@ shared_ptr<_astNode> _ast::cat_term() {
     }
 }
 
-shared_ptr<_astNode> _ast::pre_read_term() {
+shared_ptr<_preRead_node> _ast::pre_read_term() {
     //pre_read_term 可以为nullptr
     if (pos + 5 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
@@ -137,7 +141,7 @@ shared_ptr<_astNode> _ast::pre_read_term() {
     }
 }
 
-shared_ptr<_astNode> _ast::post_read_term() {
+shared_ptr<_preRead_node> _ast::post_read_term() {
     //post_read_term 可以为nullptr
     if (pos + 4 >= re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
@@ -333,7 +337,12 @@ bool _ast::charSetTrans(shared_ptr<_charSet_node> r) {
         r->deleteSpaceRange();
     } else if (re[pos] == '\\') {
         r->addCharRange(pair<wchar_t, wchar_t>('\\', '\\' + 1));
+    } else {
+        //无意义的转义，语法错误
+        err();
+        return false;
     }
+    ++pos;
     return true;
 }
 
@@ -416,19 +425,22 @@ shared_ptr<_astNode> _ast::charClass() {
         ++pos;  //match '^' : '[^'
     } 
     while(pos < re.size() && re[pos] != ']') {
-        auto pre = re[pos];
-        ++pos;  
         if (pos < re.size() && re[pos] == '\\') {
            //处理转义字符，字符类中的转义字符和字符类之外的转义处理不同 
             if (!charSetTrans(r)) {
                 return nullptr;
             }
         }
+        auto pre = re[pos];
+        ++pos;  
         if (pos < re.size() && re[pos] == '-') {
             ++pos;
+            if (pre > re[pos]) {
+                err();
+                return nullptr;
+            }
             r->addCharRange(pair<wchar_t, wchar_t>(pre, re[pos]));
             ++pos;
-            return r;
         } else if (pos >= re.size()) {
             err();
             return nullptr;
