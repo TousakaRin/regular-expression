@@ -172,13 +172,18 @@ _reference_node::_reference_node(unsigned int id) : index(id) {
     
 }
 
+_reference_node::_reference_node(unsigned int id, const wstring& n) : name(n), index(id) {
+
+}
+
 string _reference_node::toString() {
     string info;
-    info += " _reference_node ";
-    info += " reference index : " + int2string(index);
+    info += " _reference_node \n";
+    info += " reference index : " + int2string(index) + "\n";
     if (name.size() != 0) {
         info += " reference name : " + wstring_to_utf8(name);
     }
+    info += "\n\n";
     return info;
 }
 

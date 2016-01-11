@@ -7,7 +7,7 @@ using namespace std;
 using namespace rgx;
 
 void _ast::err() {
-    cout << "-------------------------------------------------" << endl;
+    cout << "------------------------------------------------------" << endl;
     cout << "语法错误哟~" << endl;
     cout << "position :  " << pos << endl;
     if (pos < re.size() - 1) {
@@ -17,7 +17,7 @@ void _ast::err() {
     } else {
         cout << wstring_to_utf8(re.substr(0, pos)) << endl;
     }
-    cout << "-------------------------------------------------" << endl;
+    cout << "------------------------------------------------------" << endl << endl;
 }
 
 _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) , catchNum(0) {
@@ -30,7 +30,7 @@ shared_ptr<_astNode> _ast::re_term() {
     auto r = or_term();         //r 始终为子树的根节点
     while (pos < re.size() && re[pos] == '|') {
         ++pos;           // match '|'
-        if (pos >= re.size()) {
+           if (pos >= re.size()) {
             err();
             return nullptr;
         }
@@ -189,7 +189,7 @@ shared_ptr<_astNode> _ast::charSet_term() {
     } else if (pos + 7 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 3] == '<') {
         //case 2 : (?P<name> )
         return namedCatch();
-    } else if (pos + 5 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 2] == '=') {
+    } else if (pos + 5 < re.size() && re[pos] == '(' && re[pos + 1] == '?' && re[pos + 2] == 'P' && re[pos + 3] == '=') {
         //case 3 : (?P=name)
         pos += 4;   //match '(?P='
         wstring name;
@@ -198,6 +198,7 @@ shared_ptr<_astNode> _ast::charSet_term() {
                 ++pos;
             }
             name.push_back(re[pos]);
+            ++pos;
         }
         if (pos == re.size()) {
             err();
@@ -212,7 +213,7 @@ shared_ptr<_astNode> _ast::charSet_term() {
     } else if(pos + 2 < re.size() && re[pos] == '[') {
         //case 5 : [^-a-bf-i]
         return charClass();
-    } else if (pos < re.size() && pos == '\\') {
+    } else if (pos < re.size() && re[pos] == '\\') {
         //case 6 : \xxx
         return normalTrans();
     } else {
@@ -456,19 +457,16 @@ shared_ptr<_astNode> _ast::normalTrans() {
     // 检查转义是否有意义
     bool check = false;
     for (auto w : _normalTrans_set) {
-        check = (w == re[pos]);
+        check = check || (w == re[pos]);
     }
-    int n = getNum();
-    if (!check && n < 0) {
+    if (!check) {
         err();
         return nullptr;
     }
 
-
-    if (n >= 0) {
-        return unnamedReference(n);
-    }
-    if (re[pos] == 'w') {
+    if (re[pos] == '<') {
+        return unnamedReference();
+    } else if (re[pos] == 'w') {
         r->addWordRange(); 
     } else if (re[pos] == 'W') {
         r->deleteWordRange();
@@ -504,11 +502,19 @@ int _ast::getNum() {
     return sum;
 }
 
-shared_ptr<_astNode> _ast::unnamedReference(unsigned int index) {
-    if (index > catchNum) {
+shared_ptr<_astNode> _ast::unnamedReference() {
+    //  '\<number>'
+    ++pos;  //match '<'
+    int index  = getNum(); //getNum
+    if (index < 0 || static_cast<unsigned int>(index) > catchNum) {
         err();
         return nullptr;
     }
+    if (pos >= re.size() || re[pos] != '>') {
+        err();
+        return nullptr;
+    }
+    ++pos;  //match '>'
     return make_shared<_reference_node>(index);
 }
 
@@ -517,12 +523,12 @@ shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
         err();
         return nullptr;
     }
-    return make_shared<_reference_node>(nameMap[name]);
+    return make_shared<_reference_node>(nameMap[name], name);
 }
 
 
 wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
 
-wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D'};
+wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D', '<'};
 
 wchar_t _ast::_charSet_mask[] = {'{', '}', '?', '*', '+', '|'};

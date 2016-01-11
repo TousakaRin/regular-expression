@@ -31,3 +31,6 @@ rgx.o : rgx.h\
 	rgx.cpp
 	g++-5 -c $(flag) rgx.cpp
 
+clean :
+	rm test *.o
+	rm -rf test.*

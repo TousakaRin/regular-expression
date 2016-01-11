@@ -28,7 +28,6 @@ void rgx::astTraversal(const _ast& ast) {
     if (r) {
         s.push(r);
     } else {
-        cout << "r == nullptr !" << endl;
         return;
     }
     while(!s.empty()) {

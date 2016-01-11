@@ -105,6 +105,7 @@ public:
     std::wstring name;
     unsigned int index;
     _reference_node(unsigned int);
+    _reference_node(unsigned int, const std::wstring&);
     virtual std::string toString();
 };
 
