@@ -25,7 +25,6 @@ _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) ,
     if (root != nullptr && pos < re.size()) {
         err();
     }
-    // 当root为nullptr时，必然会在出现错误的地方报错，这里不需要再报错，也无需其他错误处理
 }
 
 shared_ptr<_astNode> _ast::re_term() {
@@ -80,7 +79,8 @@ shared_ptr<_astNode> _ast::or_term() {
             newRoot->right = n;
             r = newRoot;
         } else {
-            //只有直接遇到错误字符的地方才需要报错
+            //控制流到达这里说明出现了cat_term的前缀，但是却解析出错了
+            err();
             return nullptr;
         }
     } 
@@ -101,28 +101,27 @@ shared_ptr<_astNode> _ast::cat_term() {
         //在cat_term中r若不是position_term，则r是charSet_term
         r = charSet_term();
     }
-    if (!r && pre) {
-        err();
-        return nullptr;
-    } else if (!r) {
-        return nullptr;
-    }
     auto numt = num_term();
     auto post = post_read_term();
-    if (numt) {
+    if (!numt) {
         // numt 必不为空，即使表达式中没有num_term, num_term()方法也回返回一个_numCount_node
         // 否则无法在charSet_term方法中正确识别 numCount 返回的错误---numCount本来就是可以为空的
         // 所以这里在numCount为空时返回默认值1
-        if (numt->lower == 1 && numt->upper == 1 && !pre && ! post) {
-            //若既没有正向预读，又没有反向预读，重复次数还为1，则没有生成numCount 节点的必要，直接返回r
-            return r;
-        }
+        err();
+        return nullptr;
+    } else if (!r && (post || pre)) {
+        //如果charSet_term 为空但是预读不为空，则说明出现了裸露的预读字段，出错
+        err();
+        return nullptr;
+    }
+    if (numt->lower == 1 && numt->upper == 1 && !pre && ! post) {
+        //若既没有正向预读，又没有反向预读，重复次数还为1，则没有生成numCount 节点的必要，直接返回r
+        return r;
+    } else {
         numt->left = r;
         numt->pre_read = pre;
         numt->pre_read = pre; 
         return numt;
-    } else {
-        return nullptr;
     }
 }
 
@@ -141,15 +140,8 @@ shared_ptr<_preRead_node> _ast::pre_read_term() {
             ++pos;  //match ')'
             r->dfaTree = n;
             return r;
-        } else if (pos >= re.size() || re[pos] != ')') {
-            err();
-            return nullptr;
-        } else if (!n) {
-            //错误会再re_term()中处理
-            return nullptr;
         } else {
-            // 此处应该永远不可达，因为 n, pos < re.size(), re[pos] 都已经全部测试过了
-            // 加上这个是为了消除警告'控制流达到非void函数的末尾'
+            err();
             return nullptr;
         }
     } else {
@@ -173,14 +165,8 @@ shared_ptr<_preRead_node> _ast::post_read_term() {
             ++pos;  //match ')'
             r->dfaTree = n;
             return r;
-        } else if (pos >= re.size() || re[pos] != ')') {
-            err();
-            return nullptr;
-        } else if (!n) {
-            return nullptr;
         } else {
-            // 此处应该永远不可达，因为 n, pos < re.size(), re[pos] 都已经全部测试过了
-            // 加上这个是为了消除警告'控制流达到非void函数的末尾'
+            err();
             return nullptr;
         }
     } else {
@@ -372,13 +358,10 @@ shared_ptr<_astNode> _ast::normalBracket() {
     if (r && pos < re.size() && re[pos] == ')') {
         ++pos;      //match ')'
         return r;
-    } else if (pos == re.size() || re[pos] != ')'){
+    } else {
         err();
         return nullptr;
-    } else {
-        return nullptr;   //只在发现错误字符时报错，否则交给下级函数报错
-                         // 即r == nullptr时，由re_term()函数报错
-    }
+    } 
 }
 
 
@@ -402,10 +385,8 @@ shared_ptr<_catch_node> _ast::namedCatch() {
             r->catchIndex = ++catchNum;
             nameMap[r->name] = catchNum;
             return r;
-        } else if (pos >= re.size() || re[pos] != ')'){
-            err();
-            return nullptr;
         } else {
+            err();
             return nullptr;
         }
     } else {
@@ -424,10 +405,8 @@ shared_ptr<_catch_node> _ast::unnamedCatch() {
         r->catchIndex = ++catchNum;
         r->left = n;
         return r;
-    } else if (pos >= re.size() || re[pos] != ')') {
-        err();
-        return nullptr;
     } else {
+        err();
         return nullptr;
     }
 }
@@ -447,6 +426,7 @@ shared_ptr<_charSet_node> _ast::charClass() {
         if (pos < re.size() && re[pos] == '\\') {
            //处理转义字符，字符类中的转义字符和字符类之外的转义处理不同 
             if (!charSetTrans(r)) {
+                err();
                 return nullptr;
             }
         }

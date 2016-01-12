@@ -12,7 +12,7 @@ int main() {
 
 #ifdef _ast_test_
 //    wstring s = L"(?<!反向预读君)(?:括号君|(?P<捕获君>WTF?)){45-78}(?=预读君)连接君(?P=捕获君)";
-    wstring s = L"(?P<抓你啊>^卧槽？){19-19}?";
+    wstring s = L"(?P<抓你啊>^卧槽？){19-18}?";
     cout << wstring_to_utf8(s) << endl;
     _ast t(s);
     astTraversal(t);
