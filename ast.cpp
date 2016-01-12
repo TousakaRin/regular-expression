@@ -1,7 +1,5 @@
 #include "ast.h"
 #include "stringTools.h"
-#include <locale>
-#include <cassert>
 
 using namespace std;
 using namespace rgx;
@@ -12,16 +10,21 @@ void _ast::err() {
     cout << "position :  " << pos << endl;
     if (pos < re.size() - 1) {
         cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1)) << RESET << wstring_to_utf8(re.substr(pos + 1)) << endl;
-    } else if (pos < re.size()){
+    } else if (pos < re.size()) {
         cout << wstring_to_utf8(re.substr(0, pos)) << RED << wstring_to_utf8(re.substr(pos, 1)) << RESET << endl;
     } else {
         cout << wstring_to_utf8(re.substr(0, pos)) << endl;
     }
     cout << "------------------------------------------------------" << endl << endl;
+    exit(0);
 }
+
 
 _ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) , catchNum(0) {
     root = re_term();
+    if (root != nullptr && pos < re.size()) {
+        err();
+    }
     // 当root为nullptr时，必然会在出现错误的地方报错，这里不需要再报错，也无需其他错误处理
 }
 
