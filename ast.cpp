@@ -53,6 +53,7 @@ shared_ptr<_astNode> _ast::re_term() {
      * 否则就是出错了！！！
     */
     if (pos < re.size() && re[pos] != ')') {
+        cout << "second" << endl;
         err();
         return nullptr;
     }
@@ -265,6 +266,7 @@ shared_ptr<_numCount_node>  _ast::num_term() {
             return make_shared<_numCount_node>(lower, lower);
         }
         if (re[pos] == '-') {
+            auto errPos = pos;
             ++pos;
             int upper = getNum();
             if (upper < 0) {
@@ -274,6 +276,7 @@ shared_ptr<_numCount_node>  _ast::num_term() {
             if (pos < re.size() && re[pos] == '}') {
                 ++pos;
                 if (lower > upper) {
+                    pos = errPos;
                     err();
                     return nullptr;
                 }
