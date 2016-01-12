@@ -28,17 +28,17 @@ private:
     std::shared_ptr<_astNode> cat_term();
     std::shared_ptr<_preRead_node> pre_read_term();
     std::shared_ptr<_preRead_node> post_read_term();
-    std::shared_ptr<_astNode> position_term();                        //位置节点 \A \Z \b \B ^ $
+    std::shared_ptr<_position_node> position_term();                         //位置节点 \A \Z \b \B ^ $
     std::shared_ptr<_astNode> charSet_term();              
-    std::shared_ptr<_astNode> normalBracket();                        //普通括号    (?:)
-    std::shared_ptr<_astNode> namedCatch();                           //具名捕获    (?P<name>)
-    std::shared_ptr<_astNode> unnamedCatch();                         //匿名捕获    ()
-    std::shared_ptr<_astNode> namedReference(const std::wstring &);   //具名引用    (?P=name)
-    std::shared_ptr<_astNode> unnamedReference();                     //匿名引用    \index
-    std::shared_ptr<_astNode> normalTrans();                          //常规转义    \s,\?,\+
-    std::shared_ptr<_astNode> charClass();                            //字符类      [^xxx] | [xxx]
-    std::shared_ptr<_numCount_node> num_term();                       //数量单位    ?, ??, +, +?....
-    bool charSetTrans(std::shared_ptr<_charSet_node>);                //处理字符类中的预定义字符类 /w,/W,/s,/S,/d,/D
+    std::shared_ptr<_astNode> normalBracket();                               //普通括号    (?:)
+    std::shared_ptr<_catch_node> namedCatch();                               //具名捕获    (?P<name>)
+    std::shared_ptr<_catch_node> unnamedCatch();                             //匿名捕获    ()
+    std::shared_ptr<_reference_node> namedReference(const std::wstring &);   //具名引用    (?P=name)
+    std::shared_ptr<_reference_node> unnamedReference();                     //匿名引用    \index
+    std::shared_ptr<_astNode> normalTrans();                                 //常规转义    \s,\?,\+
+    std::shared_ptr<_charSet_node> charClass();                              //字符类      [^xxx] | [xxx]
+    std::shared_ptr<_numCount_node> num_term();                              //数量单位    ?, ??, +, +?....
+    bool charSetTrans(std::shared_ptr<_charSet_node>);                       //处理字符类中的预定义字符类 /w,/W,/s,/S,/d,/D
     void err();
 
     bool isKeyword(std::wstring::size_type);

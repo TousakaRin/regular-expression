@@ -92,7 +92,7 @@ shared_ptr<_astNode> _ast::cat_term() {
     //判断是否属于位置节点^, $, \A...位置节点其实几乎可以
     //和普通节点一同处理，在这里与普通的字符节点分开处理,感觉
     //这样逻辑更加清晰一些
-    auto r = position_term();
+    shared_ptr<_astNode> r = position_term();
     if (!r) {
         //在cat_term中r若不是position_term，则r是charSet_term
         r = charSet_term();
@@ -107,10 +107,16 @@ shared_ptr<_astNode> _ast::cat_term() {
     auto post = post_read_term();
     if (numt) {
         // numt 必不为空，即使表达式中没有num_term, num_term()方法也回返回一个_numCount_node
-        r->numCount = numt;
-        r->pre_read = pre; 
-        r->post_read = post;
-        return r;
+        // 否则无法在charSet_term方法中正确识别 numCount 返回的错误---numCount本来就是可以为空的
+        // 所以这里在numCount为空时返回默认值1
+        if (numt->lower == 1 && numt->upper == 1 && !pre && ! post) {
+            //若既没有正向预读，又没有反向预读，重复次数还为1，则没有生成numCount 节点的必要，直接返回r
+            return r;
+        }
+        numt->left = r;
+        numt->pre_read = pre;
+        numt->pre_read = pre; 
+        return numt;
     } else {
         return nullptr;
     }
@@ -370,7 +376,7 @@ shared_ptr<_astNode> _ast::normalBracket() {
 }
 
 
-shared_ptr<_astNode> _ast::namedCatch() {
+shared_ptr<_catch_node> _ast::namedCatch() {
    // 在函数调用之前检查前缀是否为 (?P< ,  函数内部不再检查前缀
     pos += 4;  //match '(?P<'
     auto r = make_shared<_catch_node>(); 
@@ -402,7 +408,7 @@ shared_ptr<_astNode> _ast::namedCatch() {
     }
 }
 
-shared_ptr<_astNode> _ast::unnamedCatch() {
+shared_ptr<_catch_node> _ast::unnamedCatch() {
     //进入函数之前判断前缀是(,并且不是(?
     ++pos;    // match'('
     auto r = make_shared<_catch_node>();
@@ -420,7 +426,7 @@ shared_ptr<_astNode> _ast::unnamedCatch() {
     }
 }
 
-shared_ptr<_astNode> _ast::charClass() {
+shared_ptr<_charSet_node> _ast::charClass() {
     //进入函数之前判断前缀
     auto r = make_shared<_charSet_node>();
     ++pos; //match '['
@@ -522,7 +528,7 @@ int _ast::getNum() {
     return sum;
 }
 
-shared_ptr<_astNode> _ast::unnamedReference() {
+shared_ptr<_reference_node> _ast::unnamedReference() {
     //  '\<number>'
     ++pos;  //match '<'
     int index  = getNum(); //getNum
@@ -539,7 +545,7 @@ shared_ptr<_astNode> _ast::unnamedReference() {
 }
 
 
-shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
+shared_ptr<_reference_node> _ast::namedReference(const wstring &name) {
     if (nameMap.find(name) == nameMap.end()) {
         err();
         return nullptr;
@@ -547,7 +553,7 @@ shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
     return make_shared<_reference_node>(nameMap[name], name);
 }
 
-shared_ptr<_astNode> _ast::position_term() {
+shared_ptr<_position_node> _ast::position_term() {
     //本来生成位置节点时应该按照节点的类型对位置和数量信息进行精简
     //这部分工作交给生成自动机时在执行，为什么。。。因为生成ast的时候
     //所有的节点都用的_astNode类型啊，哭

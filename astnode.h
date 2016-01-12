@@ -123,6 +123,7 @@ public:
     bool greedy;
     int lower, upper;
     virtual std::string toString();
+    std::shared_ptr<_preRead_node> pre_read, post_read;
 };
 
 
