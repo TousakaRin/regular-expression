@@ -89,7 +89,14 @@ shared_ptr<_astNode> _ast::cat_term() {
         return nullptr;
     }
     auto pre = pre_read_term();
-    auto r = charSet_term();
+    //判断是否属于位置节点^, $, \A...位置节点其实几乎可以
+    //和普通节点一同处理，在这里与普通的字符节点分开处理,感觉
+    //这样逻辑更加清晰一些
+    auto r = position_term();
+    if (!r) {
+        //在cat_term中r若不是position_term，则r是charSet_term
+        r = charSet_term();
+    }
     if (!r && pre) {
         err();
         return nullptr;
@@ -491,6 +498,7 @@ shared_ptr<_astNode> _ast::normalTrans() {
     } else if (re[pos] == 'S') {
         r->deleteSpaceRange();
     } else {
+        //转义关键字
         r->addCharRange(pair<wchar_t, wchar_t>(re[pos], re[pos]));
     }
     ++pos;  // match tranChar
@@ -530,6 +538,7 @@ shared_ptr<_astNode> _ast::unnamedReference() {
     return make_shared<_reference_node>(index);
 }
 
+
 shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
     if (nameMap.find(name) == nameMap.end()) {
         err();
@@ -538,9 +547,37 @@ shared_ptr<_astNode> _ast::namedReference(const wstring &name) {
     return make_shared<_reference_node>(nameMap[name], name);
 }
 
-
+shared_ptr<_astNode> _ast::position_term() {
+    //本来生成位置节点时应该按照节点的类型对位置和数量信息进行精简
+    //这部分工作交给生成自动机时在执行，为什么。。。因为生成ast的时候
+    //所有的节点都用的_astNode类型啊，哭
+    if (pos >= re.size()) {
+        return nullptr;
+    }
+    if (re[pos] == '^') {
+        ++pos;
+        return make_shared<_position_node>(_position_node::LINE_BEGIN);
+    } else if (re[pos] == '$') {
+        ++pos;
+        return make_shared<_position_node>(_position_node::LINE_END);
+    } else if (pos + 1 < re.size() && re[pos] == '\\' && re[pos + 1] == 'A') {
+        pos += 2;
+        return make_shared<_position_node>(_position_node::STRING_BEGIN);
+    } else if (pos + 1 < re.size() && re[pos] == '\\' && re[pos + 1] == 'Z') {
+        pos += 2;
+        return make_shared<_position_node>(_position_node::STRING_END);
+    } else if (pos + 1 < re.size() && re[pos] == '\\' && re[pos + 1] == 'b') {
+        pos += 2;
+        return make_shared<_position_node>(_position_node::BREAK_OFF);
+    } else if (pos + 1 < re.size() && re[pos] == '\\' && re[pos + 1] == 'B') {
+        pos += 2;
+        return make_shared<_position_node>(_position_node::NO_BREAK_OFF);
+    } else {
+        return nullptr;
+    }
+}
 wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
 
-wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D', '<'};
+wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D', '<', '^', '$'};
 
 wchar_t _ast::_charSet_mask[] = {'{', '}', '?', '*', '+', '|'};

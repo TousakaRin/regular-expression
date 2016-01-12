@@ -23,10 +23,11 @@ string _astNode::toString() {
         info += string(" numCount \n") + 
             " lower : "  + int2string(numCount->lower) + 
                 " upper : " + int2string(numCount->upper) +
-            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+            "\n greedy : " + bool2string(numCount->greedy);
     } else {
-        info += " errrrrrrror  no numCount found \n\n";
+        info += " no numCount ";
     }
+    info += "\n\n";
     return info;
 }
 
@@ -45,10 +46,11 @@ string _or_node::toString() {
         info += string(" numCount \n") + 
             " lower : "  + int2string(numCount->lower) + 
                 " upper : " + int2string(numCount->upper) +
-            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+            "\n greedy : " + bool2string(numCount->greedy);
     } else {
-        info += " errrrrrrror  no numCount found \n\n";
+        info += " no numCount ";
     }
+    info += "\n\n";
     return info;
 }
 
@@ -148,7 +150,7 @@ string _charSet_node::toString() {
                 " upper : " + int2string(numCount->upper) +
             "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
-        info += " errrrrrrror  no numCount found \n\n";
+        info += " -----------Error:  no numCount found ----------\n\n";
     }
 
     for (auto p : charset) {
@@ -206,7 +208,7 @@ string _reference_node::toString() {
                 " upper : " + int2string(numCount->upper) +
             "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
-        info += " errrrrrrror  no numCount found \n\n";
+        info += " -----------Error:  no numCount found ----------\n\n";
     }
     info += " reference index : " + int2string(index) + "\n";
     if (name.size() != 0) {
@@ -255,9 +257,10 @@ string _catch_node::toString() {
         info += string(" numCount ") + 
             " lower : "  + int2string(numCount->lower) + 
                 " upper : " + int2string(numCount->upper) +
-            "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
+            "\n greedy : " + bool2string(numCount->greedy) + "\n";
     } else {
-        info += " errrrrrrror  no numCount found \n\n";
+        info += " -----------Error:  no numCount found ----------\n\n";
+        //info += " errrrrrrror  no numCount found \n\n";
     }
     info += " _catch_node \n";
     info += " catchIndex : " + int2string(catchIndex) + "\n";
@@ -271,7 +274,7 @@ string _catch_node::toString() {
 /*-----------------------------------------------*/
 string _cat_node::toString() {
     string info;
-    info += " _cat_node \n\n";
+    info += " _cat_node \n";
     if (pre_read) {
         info += " pre_read ";
     }
@@ -284,7 +287,7 @@ string _cat_node::toString() {
                 " upper : " + int2string(numCount->upper) +
             "\n greedy : " + bool2string(numCount->greedy) + "\n\n";
     } else {
-        info += " errrrrrrror  no numCount found \n\n";
+        info += " no numCount \n\n";
     }
     return info;
 }
@@ -298,12 +301,40 @@ _position_node::_position_node(position_type p) : position(p) {
 string _position_node::toString() {
     string info;
     info += " _position_node \n";
-    info += " position : ";
-    if (position == lineBegin) {
-        info += " lineBegin ";
-    } else {
-        info += " lineEnd ";
+    if (pre_read) {
+        info += " pre_read ";
     }
+    if (post_read) {
+        info += " pos_resd \n";
+    }
+    if (numCount) {
+        info += string(" numCount \n") + 
+            " lower : "  + int2string(numCount->lower) + 
+                " upper : " + int2string(numCount->upper) +
+            "\n greedy : " + bool2string(numCount->greedy) + "\n";
+    } else {
+        info += " -----------Error:  no numCount found ----------\n\n";
+    }
+    info += " position : " + positionString();
     info += "\n\n";
     return info;
+}
+
+string _position_node::positionString() {
+    switch (position) {
+        case LINE_BEGIN :
+            return " LINE_BEGIN ";
+        case LINE_END :
+            return " LINE_END ";
+        case STRING_BEGIN :
+            return " STRING_BEGIN ";
+        case STRING_END :
+            return " STRING_END "; 
+        case BREAK_OFF :
+            return " BREAK_OFF ";
+        case NO_BREAK_OFF :
+            return " NO_BREAK_OFF ";
+        default :
+            return " TYPE ERROR !!! ";
+    }
 }

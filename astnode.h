@@ -12,9 +12,7 @@ class _numCount_node;
 class _preRead_node;
 class _astNode {
 public:
-    std::shared_ptr<_preRead_node> pre_read, post_read;
     std::shared_ptr<_astNode> left, right;
-    std::shared_ptr<_numCount_node> numCount;
     virtual std::string toString();
     virtual ~_astNode();  
 };
@@ -117,7 +115,7 @@ public:
 /*-----------------------------------------------*/
 
 
-class _numCount_node {
+class _numCount_node : public _astNode {
 public:
     _numCount_node();
     _numCount_node(int, int);
@@ -131,11 +129,12 @@ public:
 /*-----------------------------------------------*/
 
 
-class _position_node {
+class _position_node : public _astNode {
 public:
-    enum position_type {lineBegin, lineEnd} position;
+    enum position_type {LINE_BEGIN, LINE_END, STRING_BEGIN, STRING_END, BREAK_OFF, NO_BREAK_OFF} position;
     _position_node(position_type);
-    std::string toString();
+    virtual std::string toString();
+    std::string positionString();
 };
 
 
