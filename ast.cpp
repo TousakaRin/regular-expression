@@ -20,7 +20,7 @@ void _ast::err() {
 }
 
 
-_ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) , catchNum(0) {
+_ast::_ast(const wstring &regular_expression) : re(regular_expression), pos(0) , catchNum(0) , _inner_char_trans(new unsigned int[1 << (sizeof(wchar_t))]) {
     root = re_term();
     if (root != nullptr && pos < re.size()) {
         err();
@@ -568,6 +568,7 @@ shared_ptr<_position_node> _ast::position_term() {
         return nullptr;
     }
 }
+
 wchar_t _ast::_cat_start_mask[] = {'{','}', ')', ']', '?', '*', '+', '|'};
 
 wchar_t _ast::_normalTrans_set[] = {'{', '}', '(', ')', '[', ']', '?', '*', '+', '|', '\\', 'w', 'W', 's', 'S', 'd', 'D', '<', '^', '$'};

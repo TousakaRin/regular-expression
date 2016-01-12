@@ -50,7 +50,7 @@ private:
 
     std::map<std::wstring, unsigned int> nameMap; 
     unsigned int catchNum;
-    bool errMask;
+    std::shared_ptr<unsigned int> _inner_char_trans;
 };
 
 }

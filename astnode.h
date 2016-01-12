@@ -38,6 +38,7 @@ public:
     //范围内的每一个字符由'|'连接
     //如pair{a, c} === [a-c] === (?:a|b|c)
     std::vector<std::pair<wchar_t, wchar_t>> charset;
+    std::vector<std::pair<wchar_t, wchar_t>> deletedCharset;
     void addCharRange(const std::pair<wchar_t, wchar_t>&);
     void addCharRange(std::pair<wchar_t, wchar_t>&&);
     void addDeleteRange(std::pair<wchar_t, wchar_t>&&);
