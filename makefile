@@ -1,4 +1,4 @@
-objects = main.o ast.o astnode.o matchObj.o rgx.o stringTools.o pattern.o
+objects = main.o ast.o astnode.o matchObj.o rgx.o stringTools.o pattern.o edgeManager.o
 flag = -std=c++11 -Wall -g
 
 test : $(objects)
@@ -8,7 +8,7 @@ main.o : ast.h astnode.h stringTools.h\
 	main.cpp
 	g++-5 -c $(flag) main.cpp
 
-ast.o : ast.h \
+ast.o : ast.h pattern.h\
 	ast.cpp
 	g++-5 -c $(flag) ast.cpp
 astnode.o : astnode.h stringTools.h\
@@ -30,6 +30,10 @@ pattern.o : ast.h pattern.h  \
 rgx.o : rgx.h\
 	rgx.cpp
 	g++-5 -c $(flag) rgx.cpp
+
+edgeManager.o : edgeManager.h \
+	edgeManager.cpp
+	g++-5 -c  $(flag) edgeManager.cpp
 
 clean :
 	rm test *.o

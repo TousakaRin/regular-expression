@@ -7,7 +7,15 @@
 
 namespace rgx {
 
-std::shared_ptr<pattern> compile (const std::wstring& regular_expression);
+/*
+ *    usage :
+ *    string regular_expression = u8"regular[123]"
+ *    auto t = complie (regular_expression);
+ *
+ */
+
+
+std::shared_ptr<pattern> compile (const std::string& regular_expression);
 
 void astTraversal(const _ast& ast);
 

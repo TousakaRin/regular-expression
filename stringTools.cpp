@@ -27,6 +27,17 @@ const char* rgx::BOLDCYAN      = "\033[1m\033[36m"; /* Bold Cyan */
 const char* rgx::BOLDWHITE     = "\033[1m\033[37m"; /* Bold White */
 
 
+
+bool rgx::isLittleEndien() {
+    unsigned int i = 0x12345678;
+    unsigned char *p = reinterpret_cast<unsigned char*>(&i);
+    if (static_cast<unsigned int>(*p) == 0x12) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 string rgx::int2string(int i) {
     string s;
     if (i == 0) {
@@ -55,17 +66,18 @@ string rgx::bool2string(bool b) {
 }
 
 
-
-// convert UTF-8 string to wstring
-std::wstring rgx::utf8_to_wstring (const std::string& str)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.from_bytes(str);
-}
-
-// convert wstring to UTF-8 string
-std::string rgx::wstring_to_utf8 (const std::wstring& str)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+string rgx::ucs2_to_string(const std::u16string& str) {
+    static wstring_convert<codecvt_utf8<char16_t>, char16_t> myconv;
     return myconv.to_bytes(str);
 }
+
+u16string rgx::string_to_ucs2(const std::string& str) {
+    static wstring_convert<codecvt_utf8<char16_t, 0x10ffff, std::little_endian>, char16_t> myconv_little_endian;
+    static wstring_convert<codecvt_utf8<char16_t>, char16_t> myconv_big_endian;
+    if (isLittleEndien()) {
+        return myconv_little_endian.from_bytes(str);
+    } else {
+        return myconv_big_endian.from_bytes(str);
+    }
+}
+

@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "edgeManager.h"
 
 namespace rgx {
 
@@ -32,26 +33,26 @@ public:
 /*-----------------------------------------------*/
 class _charSet_node: public _astNode {
 public:    
-    _charSet_node(wchar_t);
+    _charSet_node(char16_t);
     _charSet_node();
     //每一个pair表示一个范围
     //范围内的每一个字符由'|'连接
     //如pair{a, c} === [a-c] === (?:a|b|c)
-    std::vector<std::pair<wchar_t, wchar_t>> charset;
-    std::vector<std::pair<wchar_t, wchar_t>> deletedCharset;
-    void addCharRange(const std::pair<wchar_t, wchar_t>&);
-    void addCharRange(std::pair<wchar_t, wchar_t>&&);
-    void addDeleteRange(std::pair<wchar_t, wchar_t>&&);
-    void addDeleteRange(const std::pair<wchar_t, wchar_t>&);
+    std::vector<std::pair<char16_t, char16_t>> charset;
+    std::vector<std::pair<char16_t, char16_t>> deletedCharset;
+    void addCharRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
+    void addCharRange(std::pair<char16_t, char16_t>&&, std::shared_ptr<edgeManager>);
+    void addDeleteRange(std::pair<char16_t, char16_t>&&, std::shared_ptr<edgeManager>);
+    void addDeleteRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
 
-    void addWordRange();
-    void deleteWordRange();
+    void addWordRange(std::shared_ptr<edgeManager>);
+    void deleteWordRange(std::shared_ptr<edgeManager>);
 
-    void addDigitRange();
-    void delteDigitRange();
+    void addDigitRange(std::shared_ptr<edgeManager>);
+    void delteDigitRange(std::shared_ptr<edgeManager>);
 
-    void addSpaceRang();
-    void deleteSpaceRange();
+    void addSpaceRang(std::shared_ptr<edgeManager>);
+    void deleteSpaceRange(std::shared_ptr<edgeManager>);
 
     void setInversison();
     bool inversion;
@@ -91,7 +92,7 @@ public:
 class _catch_node : public _astNode {
 public:    
     unsigned int catchIndex;
-    std::wstring name;
+    std::u16string name;
     virtual std::string toString();
 };
 
@@ -102,10 +103,10 @@ public:
 /*-----------------------------------------------*/
 class _reference_node : public _astNode {
 public:
-    std::wstring name;
+    std::u16string name;
     unsigned int index;
     _reference_node(unsigned int);
-    _reference_node(unsigned int, const std::wstring&);
+    _reference_node(unsigned int, const std::u16string&);
     virtual std::string toString();
 };
 

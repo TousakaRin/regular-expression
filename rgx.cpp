@@ -5,7 +5,7 @@
 using namespace rgx;
 using namespace std;
 
-shared_ptr<pattern> rgx::compile(const wstring & re) {
+shared_ptr<pattern> rgx::compile(const string & re) {
     _ast ast(re);
     if (ast.build_type == _ast::build_to_dfa) {
         return make_shared<dfa_pattern>(ast);
@@ -23,7 +23,7 @@ void rgx::astTraversal(const _ast& ast) {
     //if (r->right) {
     //    cout << r->right->toString() << endl;
     //}
-    auto r = ast.root;
+    auto r = ast._root;
     stack<decltype(r)> s;    
     if (r) {
         s.push(r);
