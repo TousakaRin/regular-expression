@@ -41,8 +41,6 @@ public:
     std::vector<std::pair<char16_t, char16_t>> charset;
     std::vector<std::pair<char16_t, char16_t>> deletedCharset;
     void addCharRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
-    void addCharRange(std::pair<char16_t, char16_t>&&, std::shared_ptr<edgeManager>);
-    void addDeleteRange(std::pair<char16_t, char16_t>&&, std::shared_ptr<edgeManager>);
     void addDeleteRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
 
     void addWordRange(std::shared_ptr<edgeManager>);

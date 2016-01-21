@@ -14,7 +14,7 @@ int main() {
 
 //     string s = L"(?<!反向预读君)(?:括号君|(?P<捕获君>WTF?)){45-78}(?=预读君)连接君(?P=捕获君)";
 //     string s = u8"(?<!nozuonodie)(?P<抓你啊>^卧槽？){9-18}?(?!whyyoutry)";
-    string s = u8"[123456]?";
+    string s = u8"[123456\\W]?";
     _ast t(s);
     astTraversal(t);
     

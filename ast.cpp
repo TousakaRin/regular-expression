@@ -429,6 +429,8 @@ shared_ptr<_charSet_node> rgx::_ast::charClass() {
             if (!charSetTrans(r)) {
                 err();
                 return nullptr;
+            } else {
+                continue;
             }
         }
         auto pre = _re[_pos];

@@ -1,4 +1,5 @@
 #include "edgeManager.h"
+#include <iostream>
 
 using namespace std;
 using namespace rgx;
@@ -9,26 +10,25 @@ unsigned int rgx::edgeManager::getIndex(char16_t c) {
 
 
 void rgx::edgeManager::addRange(const pair<char16_t, char16_t>& range) {
-    size_t left = static_cast<size_t>(range.first), right = static_cast<size_t>(range.second);
-    if (left == 0 || _hashTable[left - 1] != _hashTable[left]) {
-        //left 未切开区间
-        if (right == _ENCODE_LENGTH || _hashTable[right - 1] != _hashTable[right]) {
-            //left和right都没有切开任何区间
-            return;
-        } else if (_hashTable[right - 1] == _hashTable[left]) {
-            // left和right在同一个区间
-            ++maxEdegs;
-            for (size_t i = right; i != _ENCODE_LENGTH || _hashTable[i] == _hashTable[i - 1]; ++i) {
-                _hashTable[i] = maxEdegs;
-            }
+    int left = static_cast<int>(range.first), right = static_cast<int>(range.second);
+    if (left != 0 && _hashTable[left - 1] == _hashTable[left]) {
+        //当left切开了区间，将left-1至该区间起点的区间设置为新的区间
+        ++maxEdegs;
+        auto bound = _hashTable[left];
+        --left;
+        while (left >= 0 && _hashTable[left] == bound) {
+            _hashTable[left] = maxEdegs;
+            --left;
         }
-    } else {
-        //left切开了区间
-        if (right == _ENCODE_LENGTH || _hashTable[right] != _hashTable[right - 1]) {
-            ++maxEdegs;
-            for (size_t i = left; i != _ENCODE_LENGTH || _hashTable[i] == _hashTable[i - 1]; ++i) {
-                _hashTable[i] = maxEdegs;
-            }
+    }
+
+    if (right !=  _ENCODE_LENGTH && _hashTable[right] == _hashTable[right - 1]) {
+        //当right切开了区间，将right到该区间终点的区间设置为新区间
+        ++maxEdegs;
+        auto bound = _hashTable[right];
+        while (right != _ENCODE_LENGTH && _hashTable[right] == bound) {
+            _hashTable[right] = maxEdegs;
+            ++right;
         }
     }
 }
