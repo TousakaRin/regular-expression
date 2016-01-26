@@ -18,7 +18,7 @@ class _ast {
     friend class dfa_pattern;
     friend class nfa_pattern;
 public:
-    enum {build_to_dfa, build_to_nfa} build_type;                                  //转换标记，表示该ast可以转换成NFA还是DFA
+    enum {build_to_dfa, build_to_nfa} _build_type;                                 //转换标记，表示该ast可以转换成NFA还是DFA
     _ast(const std::string &regular_expression);
     _ast(const _ast&) = delete;
     ~_ast();
