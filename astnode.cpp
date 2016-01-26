@@ -26,7 +26,7 @@ string rgx::_or_node::toString() {
 
 /*-----------------------------------------------*/
 
-rgx::_charSet_node::_charSet_node() : inversion(false) {
+rgx::_charSet_node::_charSet_node() : delOPT(0), inversion(false) {
 
 }
 
@@ -40,12 +40,6 @@ rgx::_charSet_node::_charSet_node(char16_t c) : inversion(false) {
 void rgx::_charSet_node::addCharRange(const pair<char16_t, char16_t>& cr, shared_ptr<edgeManager> p) {
     p->addRange(cr);
     charset.push_back(cr);
-}
-
-
-void rgx::_charSet_node::addDeleteRange(const pair<char16_t, char16_t>& cr, shared_ptr<edgeManager> p) {
-    p->addRange(cr);
-    deletedCharset.push_back(cr);
 }
 
 
@@ -63,10 +57,8 @@ void rgx::_charSet_node::addWordRange(shared_ptr<edgeManager> p) {
     addCharRange(pair<char16_t, char16_t>('0', '9' + 1), p);
 }
 
-void rgx::_charSet_node::deleteWordRange(shared_ptr<edgeManager> p) {
-    addDeleteRange(pair<char16_t, char16_t>('a', 'z' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('A', 'Z' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('0', '9' + 1), p);
+void rgx::_charSet_node::addUWordRange() {
+    delOPT |= NO_WORD;
 }
 
 void rgx::_charSet_node::addSpaceRang(shared_ptr<edgeManager> p) {
@@ -78,14 +70,8 @@ void rgx::_charSet_node::addSpaceRang(shared_ptr<edgeManager> p) {
     addCharRange(pair<char16_t, char16_t>('\v', '\v' + 1), p);
 }
 
-void rgx::_charSet_node::deleteSpaceRange(shared_ptr<edgeManager> p) {
-    addDeleteRange(pair<char16_t, char16_t>('\t', '\t' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('\r', '\r' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('\n', '\n' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('\b', '\b' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('\f', '\f' + 1), p);
-    addDeleteRange(pair<char16_t, char16_t>('\v', '\v' + 1), p);
-
+void rgx::_charSet_node::addUSpaceRange() {
+    delOPT |= NO_SPACE;
 }
 
 
@@ -93,8 +79,8 @@ void rgx::_charSet_node::addDigitRange(shared_ptr<edgeManager> p) {
     addCharRange(pair<char16_t, char16_t>('0', '9' + 1), p);
 }
 
-void rgx::_charSet_node::delteDigitRange(shared_ptr<edgeManager> p) {
-    addDeleteRange(pair<char16_t, char16_t>('0', '9' + 1), p);
+void rgx::_charSet_node::addUDigitRange() {
+    delOPT |= NO_DIGIT;
 }
 
 
@@ -105,6 +91,7 @@ string rgx::_charSet_node::toString() {
     info += " charRange :\n";
     for (auto p : charset) {
         u16string ws;
+        ws.push_back(' ');
         ws.push_back(p.first);
         ws.push_back(' ');
         ws.push_back(p.second - 1);
@@ -112,13 +99,14 @@ string rgx::_charSet_node::toString() {
         info += ucs2_to_string(ws);
     }
     info += " deleteRange :\n";
-    for (auto p : deletedCharset) {
-        u16string ws;
-        ws.push_back(p.first);
-        ws.push_back(' ');
-        ws.push_back(p.second - 1);
-        ws.push_back('\n');
-        info += ucs2_to_string(ws);
+    if (delOPT & NO_WORD) {
+        info += " NO_WORD_OPT ";
+    } 
+    if (delOPT & NO_DIGIT) {
+        info += " NO_DIGIT_OPT ";
+    }
+    if (delOPT & NO_SPACE) {
+        info += " NO_SPACE_OPT ";
     }
     info += "\n";
     return info; 

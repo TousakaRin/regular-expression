@@ -37,20 +37,21 @@ public:
     _charSet_node();
     //每一个pair表示一个范围
     //范围内的每一个字符由'|'连接
-    //如pair{a, c} === [a-c] === (?:a|b|c)
+    //如pair{a, c + 1} === [a-c] === (?:a|b|c)
+    //deleteOPT 表示\W, \S, \D三个集合
+    enum deleteOPT {NO_WORD = 0x1, NO_DIGIT = 0x10, NO_SPACE = 0x100};
+    unsigned int delOPT;
     std::vector<std::pair<char16_t, char16_t>> charset;
-    std::vector<std::pair<char16_t, char16_t>> deletedCharset;
     void addCharRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
-    void addDeleteRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
 
     void addWordRange(std::shared_ptr<edgeManager>);
-    void deleteWordRange(std::shared_ptr<edgeManager>);
+    void addUWordRange();
 
     void addDigitRange(std::shared_ptr<edgeManager>);
-    void delteDigitRange(std::shared_ptr<edgeManager>);
+    void addUDigitRange();
 
     void addSpaceRang(std::shared_ptr<edgeManager>);
-    void deleteSpaceRange(std::shared_ptr<edgeManager>);
+    void addUSpaceRange();
 
     void setInversison();
     bool inversion;

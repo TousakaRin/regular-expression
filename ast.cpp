@@ -332,15 +332,15 @@ bool rgx::_ast::charSetTrans(shared_ptr<_charSet_node> r) {
     if (_re[_pos] == 'w') {
         r->addWordRange(edgeMgr);
     } else if (_re[_pos] == 'W') {
-        r->deleteWordRange(edgeMgr);
+        r->addUWordRange();
     } else if (_re[_pos] == 'd') {
         r->addDigitRange(edgeMgr);
     } else if (_re[_pos] == 'D') {
-        r->delteDigitRange(edgeMgr);
+        r->addUDigitRange();
     } else if (_re[_pos] == 's') {
         r->addSpaceRang(edgeMgr);
     } else if (_re[_pos] == 'S') {
-        r->deleteSpaceRange(edgeMgr);
+        r->addUSpaceRange();
     } else if (_re[_pos] == '\\') {
         r->addCharRange(pair<char16_t, char16_t>('\\', '\\' + 1), edgeMgr);
     } else {
@@ -483,15 +483,15 @@ shared_ptr<_astNode> rgx::_ast::normalTrans() {
     } else if (_re[_pos] == 'w') {
         r->addWordRange(edgeMgr); 
     } else if (_re[_pos] == 'W') {
-        r->deleteWordRange(edgeMgr);
+        r->addUWordRange();
     } else if (_re[_pos] == 'd') {
         r->addDigitRange(edgeMgr);
     } else if (_re[_pos] == 'D') {
-        r->delteDigitRange(edgeMgr);
+        r->addUDigitRange();
     } else if (_re[_pos] == 's') {
         r->addSpaceRang(edgeMgr);
     } else if (_re[_pos] == 'S') {
-        r->deleteSpaceRange(edgeMgr);
+        r->addUSpaceRange();
     } else {
         //转义关键字
         r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1), edgeMgr);
