@@ -12,7 +12,8 @@ class _DFA_Node : public _FA_Node {
 };
 
 class _NFA_Node : public _FA_Node {
-
+public:
+    bool finishNode;
 };
 
 }

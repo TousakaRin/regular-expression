@@ -23,7 +23,7 @@ matchObj.o : matchObj.h \
 	matchObj.cpp
 	g++-5 -c $(flag) matchObj.cpp
 
-pattern.o : ast.h pattern.h  \
+pattern.o : ast.h pattern.h  fa_node.h \
 	pattern.cpp
 	g++-5 -c $(flag) pattern.cpp
 
