@@ -19,25 +19,25 @@ namespace rgx{
 
 class pattern {
 public:
-    virtual std::shared_ptr<matchObj> match(const std::wstring&) = 0;
-    virtual std::shared_ptr<matchObj> search(const std::wstring&) = 0;
-    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::wstring&) = 0;
+    virtual std::shared_ptr<matchObj> match(const std::u16string&) = 0;
+    virtual std::shared_ptr<matchObj> search(const std::u16string&) = 0;
+    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&) = 0;
 };
 
 class dfa_pattern : public pattern {
 public:
     dfa_pattern (const _ast&);
-    virtual std::shared_ptr<matchObj> match(const std::wstring&);
-    virtual std::shared_ptr<matchObj> search(const std::wstring&);
-    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::wstring&);
+    virtual std::shared_ptr<matchObj> match(const std::u16string&);
+    virtual std::shared_ptr<matchObj> search(const std::u16string&);
+    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
 };
 
 class nfa_pattern : public pattern {
 public:
     nfa_pattern (const _ast&); 
-    virtual std::shared_ptr<matchObj> match(const std::wstring&);
-    virtual std::shared_ptr<matchObj> search(const std::wstring&);
-    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::wstring&);
+    virtual std::shared_ptr<matchObj> match(const std::u16string&);
+    virtual std::shared_ptr<matchObj> search(const std::u16string&);
+    virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
 };
 
 }

@@ -11,15 +11,15 @@ dfa_pattern::dfa_pattern(const _ast&) {
 }
 
 
-std::shared_ptr<matchObj> dfa_pattern::match(const std::wstring&) {
+std::shared_ptr<matchObj> dfa_pattern::match(const std::u16string&) {
     return make_shared<matchObj>();
 }
 
-std::shared_ptr<matchObj> dfa_pattern::search(const std::wstring&) {
+std::shared_ptr<matchObj> dfa_pattern::search(const std::u16string&) {
     return make_shared<matchObj>();
 }
 
-std::shared_ptr<std::vector<matchObj>> dfa_pattern::findall(const std::wstring&) {
+std::shared_ptr<std::vector<matchObj>> dfa_pattern::findall(const std::u16string&) {
     return make_shared<vector<matchObj>>();
 }
 
@@ -29,15 +29,15 @@ nfa_pattern::nfa_pattern(const _ast&) {
 
 }
 
-std::shared_ptr<matchObj> nfa_pattern::match(const std::wstring&) {
+std::shared_ptr<matchObj> nfa_pattern::match(const std::u16string&) {
     return make_shared<matchObj>();
 }
 
-std::shared_ptr<matchObj> nfa_pattern::search(const std::wstring&) {
+std::shared_ptr<matchObj> nfa_pattern::search(const std::u16string&) {
     return make_shared<matchObj>();
 }
 
-std::shared_ptr<std::vector<matchObj>> nfa_pattern::findall(const std::wstring&) {
+std::shared_ptr<std::vector<matchObj>> nfa_pattern::findall(const std::u16string&) {
     return make_shared<vector<matchObj>>();
 }
 

@@ -102,16 +102,26 @@ string rgx::_charSet_node::toString() {
     string info; 
     info += " _charSet_node \n";
     info += " inversion : " + bool2string(inversion) + "\n";
+    info += " charRange :\n";
     for (auto p : charset) {
         u16string ws;
         ws.push_back(p.first);
         ws.push_back(' ');
-        ws.push_back(p.second);
+        ws.push_back(p.second - 1);
         ws.push_back('\n');
         info += ucs2_to_string(ws);
-     }
-     info += "\n";
-     return info; 
+    }
+    info += " deleteRange :\n";
+    for (auto p : deletedCharset) {
+        u16string ws;
+        ws.push_back(p.first);
+        ws.push_back(' ');
+        ws.push_back(p.second - 1);
+        ws.push_back('\n');
+        info += ucs2_to_string(ws);
+    }
+    info += "\n";
+    return info; 
 }
 
 /*-----------------------------------------------*/

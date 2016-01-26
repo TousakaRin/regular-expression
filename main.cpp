@@ -16,6 +16,7 @@ int main() {
 //     string s = u8"(?<!nozuonodie)(?P<抓你啊>^卧槽？){9-18}?(?!whyyoutry)";
     string s = u8"[123456\\W]?";
     _ast t(s);
+    cout << s << endl;
     astTraversal(t);
     
 #endif
