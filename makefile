@@ -1,4 +1,4 @@
-objects = main.o ast.o astnode.o matchObj.o rgx.o stringTools.o pattern.o edgeManager.o fa_edge.o fa_node.o
+objects = main.o ast.o astnode.o matchObj.o rgx.o stringTools.o pattern.o edgeManager.o nfaEdge.o nfaNode.o
 flag = -std=c++11 -Wall -g
 
 test : $(objects)
@@ -23,7 +23,7 @@ matchObj.o : matchObj.h \
 	matchObj.cpp
 	g++-5 -c $(flag) matchObj.cpp
 
-pattern.o : ast.h pattern.h  fa_node.h \
+pattern.o : ast.h pattern.h  nfaNode.h \
 	pattern.cpp
 	g++-5 -c $(flag) pattern.cpp
 
@@ -35,13 +35,17 @@ edgeManager.o : edgeManager.h \
 	edgeManager.cpp
 	g++-5 -c  $(flag) edgeManager.cpp
 
-fa_edge.o : fa_edge.h \
-	fa_edge.cpp
-	g++-5 -c $(flag) fa_edge.cpp
+nfaEdge.o : nfaEdge.h \
+	nfaEdge.cpp
+	g++-5 -c $(flag) nfaEdge.cpp
 
-fa_node.o : fa_edge.h fa_node.h \
-	fa_node.cpp
-	g++-5 -c $(flag) fa_node.cpp
+nfaNode.o : nfaEdge.h nfaNode.h \
+	nfaNode.cpp
+	g++-5 -c $(flag) nfaNode.cpp
+
+dfaTable.o : dfaTable.h \
+	dfaTable.cpp
+	g++-5 -c $(flag) dfaTable.cpp
 
 clean :
 	rm test *.o

@@ -1,4 +1,4 @@
-#include "fa_edge.h"
+#include "nfaEdge.h"
 
 using namespace rgx;
 

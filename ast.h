@@ -31,8 +31,8 @@ private:
     std::shared_ptr<_position_node> position_term();                               //位置节点 \A \Z \b \B ^ $
     std::shared_ptr<_astNode> charSet_term();                                      //字符或者(xx)
     std::shared_ptr<_astNode> normalBracket();                                     //普通括号    (?:)
-    std::shared_ptr<_catch_node> namedCatch();                                     //具名捕获    (?P<name>)
-    std::shared_ptr<_catch_node> unnamedCatch();                                   //匿名捕获    ()
+    std::shared_ptr<_capture_node> namedCapture();                                 //具名捕获    (?P<name>)
+    std::shared_ptr<_capture_node> unnamedCapture();                               //匿名捕获    ()
     std::shared_ptr<_reference_node> namedReference(const std::u16string &);       //具名引用    (?P=name)
     std::shared_ptr<_reference_node> unnamedReference();                           //匿名引用    \index
     std::shared_ptr<_astNode> normalTrans();                                       //常规转义    \s,\?,\+
@@ -47,7 +47,7 @@ private:
     std::shared_ptr<_astNode> _root;                                               //ast的root
     std::u16string::size_type _pos;                                                //lookahead位置
     std::map<std::u16string, unsigned int> _nameMap;                               //具名捕获-->捕获index的转换
-    unsigned int _catchIndex;                                                      //当前捕获分组的个数，初始为0，用于捕获匹配串，每增加一个用户捕获时，自增1
+    unsigned int _captureIndex;                                                    //当前捕获分组的个数，初始为0，用于捕获匹配串，每增加一个用户捕获时，自增1
     std::shared_ptr<edgeManager> edgeMgr;                                          //自动机边数量压缩转换表
     static char16_t _cat_start_mask[8];                                            //不能出现在cat_term开头的字符
     static char16_t _normalTrans_set[20];                                          //能够出现在转义字符后面的关键字(在字符类中的转义字符另外处理)

@@ -20,7 +20,7 @@ void rgx::_ast::err() {
 }
 
 
-rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_dfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _catchIndex(0) , edgeMgr(make_shared<edgeManager>()) {
+rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_dfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _captureIndex(0) , edgeMgr(make_shared<edgeManager>()) {
     _root = re_term();
     if (_root != nullptr && _pos < _re.size()) {
         err();
@@ -195,7 +195,7 @@ shared_ptr<_astNode> rgx::_ast::charSet_term() {
         return normalBracket();
     } else if (_pos + 7 < _re.size() && _re[_pos] == '(' && _re[_pos + 1] == '?' && _re[_pos + 2] == 'P' && _re[_pos + 3] == '<') {
         //case 2 : (?P<name> )
-        return namedCatch();
+        return namedCapture();
     } else if (_pos + 5 < _re.size() && _re[_pos] == '(' && _re[_pos + 1] == '?' && _re[_pos + 2] == 'P' && _re[_pos + 3] == '=') {
         //case 3 : (?P=name)
         _pos += 4;   //match '(?P='
@@ -216,7 +216,7 @@ shared_ptr<_astNode> rgx::_ast::charSet_term() {
 
     } else if (_pos < _re.size() && _re[_pos] == '(') {
         //case 4 : ()
-        return unnamedCatch();
+        return unnamedCapture();
     } else if(_pos + 2 < _re.size() && _re[_pos] == '[') {
         //case 5 : [^-a-bf-i]
         return charClass();
@@ -366,10 +366,10 @@ shared_ptr<_astNode> rgx::_ast::normalBracket() {
 }
 
 
-shared_ptr<_catch_node> rgx::_ast::namedCatch() {
+shared_ptr<_capture_node> rgx::_ast::namedCapture() {
    // 在函数调用之前检查前缀是否为 (?P< ,  函数内部不再检查前缀
     _pos += 4;  //match '(?P<'
-    auto r = make_shared<_catch_node>(); 
+    auto r = make_shared<_capture_node>(); 
     while (_pos < _re.size() && _re[_pos] != '>') {
         if (_re[_pos] == '\\') {
             ++_pos;
@@ -383,8 +383,8 @@ shared_ptr<_catch_node> rgx::_ast::namedCatch() {
         if (n && _pos < _re.size() && _re[_pos] == ')') {
             ++_pos;    //match ')'
             r->left = n;
-            r->catchIndex = ++_catchIndex;
-            _nameMap[r->name] = _catchIndex;
+            r->captureIndex = ++_captureIndex;
+            _nameMap[r->name] = _captureIndex;
             return r;
         } else {
             err();
@@ -396,14 +396,14 @@ shared_ptr<_catch_node> rgx::_ast::namedCatch() {
     }
 }
 
-shared_ptr<_catch_node> rgx::_ast::unnamedCatch() {
+shared_ptr<_capture_node> rgx::_ast::unnamedCapture() {
     //进入函数之前判断前缀是(,并且不是(?
     ++_pos;    // match'('
-    auto r = make_shared<_catch_node>();
+    auto r = make_shared<_capture_node>();
     auto n = re_term();
     if (n && _pos < _re.size() && _re[_pos] == ')') {
         ++_pos;  //match')'
-        r->catchIndex = ++_catchIndex;
+        r->captureIndex = ++_captureIndex;
         r->left = n;
         return r;
     } else {
@@ -521,7 +521,7 @@ shared_ptr<_reference_node> rgx::_ast::unnamedReference() {
     //  '\<number>'
     ++_pos;  //match '<'
     int index  = getNum(); //getNum
-    if (index < 0 || static_cast<unsigned int>(index) > _catchIndex) {
+    if (index < 0 || static_cast<unsigned int>(index) > _captureIndex) {
         err();
         return nullptr;
     }

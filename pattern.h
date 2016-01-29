@@ -4,7 +4,7 @@
 #include <memory>
 #include "matchObj.h"
 #include "ast.h"
-#include "fa_node.h"
+#include "nfaNode.h"
 #include <string>
 
 namespace rgx{

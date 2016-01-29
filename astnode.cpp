@@ -35,8 +35,22 @@ string rgx::_or_node::toString() {
 
 
 _NFA_ptr rgx::_or_node::generateNFA() {
+    // 首先新建开始与完成节点
     auto startNode = make_shared<_NFA_Node>(); 
     auto finishNode = make_shared<_NFA_Node>();
+
+    //递归获得子节点的NFA
+    auto leftChild = left->generateNFA();
+    auto rightChild = right->generateNFA();
+
+    //从startNode出发，新建两条epsilon边分别指向两个子节点NFA
+    startNode->addEpsilonEdge(leftChild->first);
+    startNode->addEpsilonEdge(rightChild->first);
+
+    //将两个子节点的finishNode各新建一条epsilon边指向生成的finishNode
+    leftChild->second->addEpsilonEdge(finishNode);
+    rightChild->second->addEpsilonEdge(finishNode);
+
     return make_shared<_NFA>(startNode, finishNode); 
 }
 
@@ -129,9 +143,9 @@ string rgx::_charSet_node::toString() {
 _NFA_ptr rgx::_charSet_node::generateNFA() {
     auto startNode = make_shared<_NFA_Node>();
     auto finishNode = make_shared<_NFA_Node>();
+    startNode->addCharSetEdge(finishNode);
     return make_shared<_NFA>(startNode, finishNode);
 }
-
 
 
 /*-----------------------------------------------*/
@@ -217,16 +231,16 @@ _NFA_ptr rgx::_numCount_node::generateNFA() {
 
 /*-----------------------------------------------*/
 
-string rgx::_catch_node::toString() {
+string rgx::_capture_node::toString() {
     string info;
-    info += " _catch_node \n";
-    info += " catchIndex : " + int2string(catchIndex) + "\n";
-    info += " catchName : " + ucs2_to_string(name);
+    info += " _capture_node \n";
+    info += " captureIndex : " + int2string(captureIndex) + "\n";
+    info += " captureName : " + ucs2_to_string(name);
     info += "\n\n";
     return info;
 }
 
-_NFA_ptr rgx::_catch_node::generateNFA() {
+_NFA_ptr rgx::_capture_node::generateNFA() {
     auto startNode = make_shared<_NFA_Node>();
     auto finishNode = make_shared<_NFA_Node>();
     return make_shared<_NFA>(startNode, finishNode);

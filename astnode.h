@@ -4,14 +4,15 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "fa_node.h"
+#include "nfaNode.h"
 #include "edgeManager.h"
+#include "dfaTable.h"
 
 namespace rgx {
 
 typedef std::shared_ptr<std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>>>  _NFA_ptr;
 typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
-typedef std::shared_ptr<_DFA_Node>  _DFA_ptr;
+typedef std::shared_ptr<_DFA_Table>  _DFA_ptr;
 
 /*-----------------------------------------------*/
 class _numCount_node;
@@ -99,9 +100,9 @@ public:
 
 /*-----------------------------------------------*/
 
-class _catch_node : public _astNode {
+class _capture_node : public _astNode {
 public:    
-    unsigned int catchIndex;
+    unsigned int captureIndex;
     std::u16string name;
     virtual std::string toString();
     virtual _NFA_ptr generateNFA();
