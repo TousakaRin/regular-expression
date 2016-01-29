@@ -8,6 +8,7 @@
 #include "edgeManager.h"
 #include "dfaTable.h"
 
+
 namespace rgx {
 
 typedef std::shared_ptr<std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>>>  _NFA_ptr;
@@ -20,8 +21,9 @@ class _preRead_node;
 class _astNode {
 public:
     std::shared_ptr<_astNode> left, right;
+    _NFA_ptr leftNFA, rightNFA;          //加上它是为了在生成NFA时更方便的使用非递归算法
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA(); //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
+    virtual _NFA_ptr generateNFA();      //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
     virtual ~_astNode();  
 };
 
