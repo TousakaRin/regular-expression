@@ -5,6 +5,8 @@
 using namespace std;
 using namespace rgx;
 
+
+
 /*-----------------------------------------------*/
 rgx::_astNode::~_astNode() {
     //do nothing
@@ -16,12 +18,26 @@ string rgx::_astNode::toString() {
     return info;
 }
 
+_NFA_ptr rgx::_astNode::generateNFA() {
+    cout << "\nan error occured !!!!\ninformation:" << endl;
+    cout << toString();
+    return  nullptr;
+}
 
 /*-----------------------------------------------*/
+
+
 string rgx::_or_node::toString() {
     string info;
     info += " or_node \n\n";
     return info;
+}
+
+
+_NFA_ptr rgx::_or_node::generateNFA() {
+    auto startNode = make_shared<_NFA_Node>(); 
+    auto finishNode = make_shared<_NFA_Node>();
+    return make_shared<_NFA>(startNode, finishNode); 
 }
 
 /*-----------------------------------------------*/
@@ -32,7 +48,7 @@ rgx::_charSet_node::_charSet_node() : delOPT(0), inversion(false) {
 
 rgx::_charSet_node::_charSet_node(char16_t c) : inversion(false) {
     cout << "-------------------" << endl;
-    cout << "err construction " << c << endl;
+    cout << " err construction " << c << endl;
     cout << "-------------------" << endl;
 }
 
@@ -41,8 +57,6 @@ void rgx::_charSet_node::addCharRange(const pair<char16_t, char16_t>& cr, shared
     p->addRange(cr);
     charset.push_back(cr);
 }
-
-
 
 
 void rgx::_charSet_node::setInversison() {
@@ -112,6 +126,14 @@ string rgx::_charSet_node::toString() {
     return info; 
 }
 
+_NFA_ptr rgx::_charSet_node::generateNFA() {
+    auto startNode = make_shared<_NFA_Node>();
+    auto finishNode = make_shared<_NFA_Node>();
+    return make_shared<_NFA>(startNode, finishNode);
+}
+
+
+
 /*-----------------------------------------------*/
 
 rgx::_preRead_node::_preRead_node(bool tag) : pattern_tag(tag), dfaTree(nullptr) {
@@ -129,6 +151,12 @@ string rgx::_preRead_node::toString() {
     return info;
 }
 
+
+_DFA_ptr rgx::_preRead_node::generateDFA() {
+    return nullptr;
+}
+
+
 /*-----------------------------------------------*/
 
 rgx::_reference_node::_reference_node(unsigned int id) : index(id) {
@@ -144,6 +172,14 @@ string rgx::_reference_node::toString() {
     info += " _reference_node \n\n";
     return info;
 }
+
+
+_NFA_ptr rgx::_reference_node::generateNFA() {
+    auto startNode = make_shared<_NFA_Node>();
+    auto finishNode = make_shared<_NFA_Node>();
+    return make_shared<_NFA>(startNode, finishNode);
+}
+
 
 /*-----------------------------------------------*/
 
@@ -175,6 +211,9 @@ string rgx::_numCount_node::toString() {
 }
 
 
+_NFA_ptr rgx::_numCount_node::generateNFA() {
+    return nullptr;
+}
 
 /*-----------------------------------------------*/
 
@@ -187,7 +226,11 @@ string rgx::_catch_node::toString() {
     return info;
 }
 
-
+_NFA_ptr rgx::_catch_node::generateNFA() {
+    auto startNode = make_shared<_NFA_Node>();
+    auto finishNode = make_shared<_NFA_Node>();
+    return make_shared<_NFA>(startNode, finishNode);
+}
 
 /*-----------------------------------------------*/
 
@@ -197,7 +240,11 @@ string rgx::_cat_node::toString() {
     return info;
 }
 
-
+_NFA_ptr rgx::_cat_node::generateNFA() {
+    auto startNode = make_shared<_NFA_Node>();
+    auto finishNode = make_shared<_NFA_Node>();
+    return make_shared<_NFA>(startNode, finishNode);
+}
 
 /*-----------------------------------------------*/
 
@@ -231,3 +278,8 @@ string rgx::_position_node::positionString() {
     }
 }
 
+_NFA_ptr rgx::_position_node::generateNFA() {
+    auto startNode = make_shared<_NFA_Node>();
+    auto finishNode = make_shared<_NFA_Node>();
+    return make_shared<_NFA>(startNode, finishNode);
+}

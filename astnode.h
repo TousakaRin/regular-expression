@@ -4,9 +4,14 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "fa_node.h"
 #include "edgeManager.h"
 
 namespace rgx {
+
+typedef std::shared_ptr<std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>>>  _NFA_ptr;
+typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
+typedef std::shared_ptr<_DFA_Node>  _DFA_ptr;
 
 /*-----------------------------------------------*/
 class _numCount_node;
@@ -15,6 +20,7 @@ class _astNode {
 public:
     std::shared_ptr<_astNode> left, right;
     virtual std::string toString();
+    virtual _NFA_ptr generateNFA(); //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
     virtual ~_astNode();  
 };
 
@@ -25,6 +31,7 @@ public:
 class _or_node : public _astNode {
 public:
     virtual std::string toString();
+    virtual _NFA_ptr generateNFA();
 };
 
 
@@ -57,6 +64,7 @@ public:
     bool inversion;
 
     virtual std::string toString();
+    virtual _NFA_ptr generateNFA();
 };
 
 
@@ -66,6 +74,7 @@ public:
 class _cat_node : public _astNode {
 public:
     virtual std::string toString();
+    virtual _NFA_ptr generateNFA();
 };
 
 
@@ -81,6 +90,7 @@ public:
     bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
     std::shared_ptr<_astNode> dfaTree;
     std::string toString();
+    _DFA_ptr generateDFA();
 };
 
 
@@ -88,13 +98,14 @@ public:
 
 
 /*-----------------------------------------------*/
+
 class _catch_node : public _astNode {
 public:    
     unsigned int catchIndex;
     std::u16string name;
     virtual std::string toString();
+    virtual _NFA_ptr generateNFA();
 };
-
 
 
 
@@ -107,9 +118,8 @@ public:
     _reference_node(unsigned int);
     _reference_node(unsigned int, const std::u16string&);
     virtual std::string toString();
+    virtual _NFA_ptr generateNFA();
 };
-
-
 
 
 
@@ -125,6 +135,7 @@ public:
     int lower, upper;
     virtual std::string toString();
     std::shared_ptr<_preRead_node> pre_read, post_read;
+    virtual _NFA_ptr generateNFA();
 };
 
 
@@ -137,6 +148,7 @@ public:
     _position_node(position_type);
     virtual std::string toString();
     std::string positionString();
+    virtual _NFA_ptr generateNFA();
 };
 
 
