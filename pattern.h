@@ -2,10 +2,8 @@
 #define _PATTERN_H_
 
 #include <memory>
-#include "matchObj.h"
-#include "ast.h"
-#include "nfaNode.h"
 #include <string>
+#include "matchObj.h"
 
 namespace rgx{
 
@@ -18,6 +16,10 @@ namespace rgx{
  *   生成自动机，代码也会更清晰（个人向ˇˍˇ） 
  * 
  */
+
+
+class _NFA_Node;
+class _ast;
 
 class pattern {
 public:

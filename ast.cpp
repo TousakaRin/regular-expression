@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "astnode.h"
 #include "stringTools.h"
 
 using namespace std;
@@ -227,13 +228,13 @@ shared_ptr<_astNode> rgx::_ast::charSet_term() {
         // single char
         // 处理'.', '.'出现在字符类中时，不具备特殊意义，所以只要在这里处理'.'
         if (_re[_pos] == '.') {
-            auto  r = make_shared<_charSet_node>();
+            auto  r = make_shared<_charSet_node>(edgeMgr);;
             r->setInversison();
             r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1), edgeMgr);
             ++_pos;
             return r;
         }
-        auto r = make_shared<_charSet_node>();
+        auto r = make_shared<_charSet_node>(edgeMgr);;
         r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1), edgeMgr);
         ++_pos;
         return r;
@@ -330,15 +331,15 @@ bool rgx::_ast::charSetTrans(shared_ptr<_charSet_node> r) {
         return false;
     }
     if (_re[_pos] == 'w') {
-        r->addWordRange(edgeMgr);
+        r->addWordRange();
     } else if (_re[_pos] == 'W') {
         r->addUWordRange();
     } else if (_re[_pos] == 'd') {
-        r->addDigitRange(edgeMgr);
+        r->addDigitRange();
     } else if (_re[_pos] == 'D') {
         r->addUDigitRange();
     } else if (_re[_pos] == 's') {
-        r->addSpaceRang(edgeMgr);
+        r->addSpaceRang();
     } else if (_re[_pos] == 'S') {
         r->addUSpaceRange();
     } else if (_re[_pos] == '\\') {
@@ -414,7 +415,7 @@ shared_ptr<_capture_node> rgx::_ast::unnamedCapture() {
 
 shared_ptr<_charSet_node> rgx::_ast::charClass() {
     //进入函数之前判断前缀
-    auto r = make_shared<_charSet_node>();
+    auto r = make_shared<_charSet_node>(edgeMgr);;
     ++_pos; //match '['
 
     //匹配在[]内作为第一个字符的'^'或'-'
@@ -462,7 +463,7 @@ shared_ptr<_charSet_node> rgx::_ast::charClass() {
 shared_ptr<_astNode> rgx::_ast::normalTrans() {
     // 入函数之前判断前缀
     ++_pos;           //match '\'
-    auto r = make_shared<_charSet_node>();
+    auto r = make_shared<_charSet_node>(edgeMgr);;
     if (_pos >= _re.size()) {
         err();
         return nullptr;
@@ -481,15 +482,15 @@ shared_ptr<_astNode> rgx::_ast::normalTrans() {
     if (_re[_pos] == '<') {
         return unnamedReference();
     } else if (_re[_pos] == 'w') {
-        r->addWordRange(edgeMgr); 
+        r->addWordRange(); 
     } else if (_re[_pos] == 'W') {
         r->addUWordRange();
     } else if (_re[_pos] == 'd') {
-        r->addDigitRange(edgeMgr);
+        r->addDigitRange();
     } else if (_re[_pos] == 'D') {
         r->addUDigitRange();
     } else if (_re[_pos] == 's') {
-        r->addSpaceRang(edgeMgr);
+        r->addSpaceRang();
     } else if (_re[_pos] == 'S') {
         r->addUSpaceRange();
     } else {

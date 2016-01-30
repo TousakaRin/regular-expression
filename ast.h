@@ -4,14 +4,27 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <map>
-#include "astnode.h"
 #include "edgeManager.h"
 
 namespace rgx {
 
+/*************************前置声明*****************************/
+
 class _ast;
 void astTraversal(const _ast&);
+class _astNode;
+class _or_node;
+class _charSet_node;
+class _cat_node;
+class _capture_node;
+class _preRead_node;
+class _reference_node;
+class _numCount_node;
+class _position_node;
+
+/*************************前置声明*****************************/
 
 class _ast {
     friend void rgx::astTraversal(const _ast&);

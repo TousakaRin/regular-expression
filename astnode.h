@@ -4,24 +4,28 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "nfaNode.h"
 #include "edgeManager.h"
+#include "stringTools.h"
 #include "dfaTable.h"
 
 
 namespace rgx {
 
+class _NFA_Node;
 typedef std::shared_ptr<std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>>>  _NFA_ptr;
 typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
 typedef std::shared_ptr<_DFA_Table>  _DFA_ptr;
 
 /*-----------------------------------------------*/
+
 class _numCount_node;
 class _preRead_node;
 class _astNode {
 public:
     std::shared_ptr<_astNode> left, right;
     _NFA_ptr leftNFA, rightNFA;          //加上它是为了在生成NFA时更方便的使用非递归算法
+    void err(const std::string&);
+    void err();
     virtual std::string toString();
     virtual _NFA_ptr generateNFA();      //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
     virtual ~_astNode();  
@@ -44,23 +48,24 @@ public:
 class _charSet_node: public _astNode {
 public:    
     _charSet_node(char16_t);
-    _charSet_node();
+    _charSet_node(std::shared_ptr<edgeManager>);
     //每一个pair表示一个范围
     //范围内的每一个字符由'|'连接
     //如pair{a, c + 1} === [a-c] === (?:a|b|c)
     //deleteOPT 表示\W, \S, \D三个集合
     enum deleteOPT {NO_WORD = 0x1, NO_DIGIT = 0x10, NO_SPACE = 0x100};
     unsigned int delOPT;
+    std::weak_ptr<edgeManager> edgeMgr;
     std::vector<std::pair<char16_t, char16_t>> charset;
     void addCharRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
 
-    void addWordRange(std::shared_ptr<edgeManager>);
+    void addWordRange();
     void addUWordRange();
 
-    void addDigitRange(std::shared_ptr<edgeManager>);
+    void addDigitRange();
     void addUDigitRange();
 
-    void addSpaceRang(std::shared_ptr<edgeManager>);
+    void addSpaceRang();
     void addUSpaceRange();
 
     void setInversison();

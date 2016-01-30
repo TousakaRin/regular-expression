@@ -5,7 +5,9 @@
 
 namespace rgx {
 
+class _charSet_node;
 class edgeManager {
+    friend _charSet_node;
 public: 
     enum {_ENCODE_LENGTH = 65536};
     edgeManager();

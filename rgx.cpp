@@ -1,5 +1,6 @@
 #include "rgx.h"
 #include "ast.h"
+#include "astnode.h"
 #include <stack>
 
 using namespace rgx;

@@ -1,5 +1,7 @@
 #include "astnode.h"
 #include "stringTools.h"
+#include "nfaEdge.h"
+#include "nfaNode.h"
 #include <iostream>
 
 using namespace std;
@@ -24,6 +26,15 @@ _NFA_ptr rgx::_astNode::generateNFA() {
     return  nullptr;
 }
 
+void rgx::_astNode::err() {
+    //出错时简单暴力的直接崩溃
+    exit(-1);
+}
+
+void rgx::_astNode::err(const string& errMsg) {
+    cout << "\n\n" << errMsg << endl;
+    err();
+}
 /*-----------------------------------------------*/
 
 
@@ -56,7 +67,7 @@ _NFA_ptr rgx::_or_node::generateNFA() {
 
 /*-----------------------------------------------*/
 
-rgx::_charSet_node::_charSet_node() : delOPT(0), inversion(false) {
+rgx::_charSet_node::_charSet_node(shared_ptr<edgeManager> edgemgr) : delOPT(0), edgeMgr(edgemgr), inversion(false) {
 
 }
 
@@ -78,24 +89,32 @@ void rgx::_charSet_node::setInversison() {
 }
 
 
-void rgx::_charSet_node::addWordRange(shared_ptr<edgeManager> p) {
+void rgx::_charSet_node::addWordRange() {
     //左闭右开区间~~~~~
-    addCharRange(pair<char16_t, char16_t>('a', 'z' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('A', 'Z' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('0', '9' + 1), p);
+    if (auto p = edgeMgr.lock()) {
+        addCharRange(pair<char16_t, char16_t>('a', 'z' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('A', 'Z' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('0', '9' + 1), p);
+    } else {
+        err("in function rgx::_charSet_node::addWordRange()  \n\n 找不到对象: edgeMgr \n\n");
+    }
 }
 
 void rgx::_charSet_node::addUWordRange() {
     delOPT |= NO_WORD;
 }
 
-void rgx::_charSet_node::addSpaceRang(shared_ptr<edgeManager> p) {
-    addCharRange(pair<char16_t, char16_t>('\t', '\t' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('\r', '\r' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('\n', '\n' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('\b', '\b' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('\f', '\f' + 1), p);
-    addCharRange(pair<char16_t, char16_t>('\v', '\v' + 1), p);
+void rgx::_charSet_node::addSpaceRang() {
+    if (auto p = edgeMgr.lock()) {
+        addCharRange(pair<char16_t, char16_t>('\t', '\t' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('\r', '\r' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('\n', '\n' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('\b', '\b' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('\f', '\f' + 1), p);
+        addCharRange(pair<char16_t, char16_t>('\v', '\v' + 1), p);
+    } else {
+        err("in function rgx::_charSet_node::addSpaceRange()  \n\n 找不到对象: edgeMgr \n\n");
+    }
 }
 
 void rgx::_charSet_node::addUSpaceRange() {
@@ -103,8 +122,12 @@ void rgx::_charSet_node::addUSpaceRange() {
 }
 
 
-void rgx::_charSet_node::addDigitRange(shared_ptr<edgeManager> p) {
-    addCharRange(pair<char16_t, char16_t>('0', '9' + 1), p);
+void rgx::_charSet_node::addDigitRange() {
+    if (auto p = edgeMgr.lock()) {
+        addCharRange(pair<char16_t, char16_t>('0', '9' + 1), p);
+    } else {
+        err("in function rgx::_charSet_node::addDigitRange()  \n\n 找不到对象: edgeMgr \n\n");
+    }
 }
 
 void rgx::_charSet_node::addUDigitRange() {
@@ -143,7 +166,20 @@ string rgx::_charSet_node::toString() {
 _NFA_ptr rgx::_charSet_node::generateNFA() {
     auto startNode = make_shared<_NFA_Node>();
     auto finishNode = make_shared<_NFA_Node>();
-    startNode->addCharSetEdge(finishNode);
+    auto newEdge = startNode->addCharSetEdge(finishNode);
+    newEdge->delOPT = delOPT;
+    if (auto p = edgeMgr.lock()) {
+        unsigned int pre = p->_hashTable[0];
+        newEdge->acceptSet.push_back(pre); 
+        for (int i = 1; i < 65536; ++i) {
+            if (p->_hashTable[i] != pre) {
+                pre = p->_hashTable[i];
+                newEdge->acceptSet.push_back(pre);
+            }
+        }
+    } else {
+        err("in function rgx::_charSet_node::generateNFA()  \n\n 找不到对象: edgeMgr \n\n");
+    }
     return make_shared<_NFA>(startNode, finishNode);
 }
 
@@ -191,6 +227,8 @@ string rgx::_reference_node::toString() {
 _NFA_ptr rgx::_reference_node::generateNFA() {
     auto startNode = make_shared<_NFA_Node>();
     auto finishNode = make_shared<_NFA_Node>();
+    auto newEdge = startNode->addReferenceEdge(finishNode);
+    newEdge->referenceIndex = index;
     return make_shared<_NFA>(startNode, finishNode);
 }
 
@@ -243,6 +281,11 @@ string rgx::_capture_node::toString() {
 _NFA_ptr rgx::_capture_node::generateNFA() {
     auto startNode = make_shared<_NFA_Node>();
     auto finishNode = make_shared<_NFA_Node>();
+    auto child = left->generateNFA();
+    auto captureStart = startNode->addCaptureStartEdge(child->first);
+    auto captureEnd = child->second->addCaptureEndEdge(finishNode);
+    captureStart->referenceIndex = captureIndex;
+    captureEnd->referenceIndex = captureIndex;
     return make_shared<_NFA>(startNode, finishNode);
 }
 
@@ -255,9 +298,10 @@ string rgx::_cat_node::toString() {
 }
 
 _NFA_ptr rgx::_cat_node::generateNFA() {
-    auto startNode = make_shared<_NFA_Node>();
-    auto finishNode = make_shared<_NFA_Node>();
-    return make_shared<_NFA>(startNode, finishNode);
+    auto leftChild = left->generateNFA();
+    auto rightChild = right->generateNFA();
+    leftChild->second->addEpsilonEdge(rightChild->first);
+    return make_shared<_NFA>(leftChild->first, rightChild->second);
 }
 
 /*-----------------------------------------------*/
@@ -295,5 +339,7 @@ string rgx::_position_node::positionString() {
 _NFA_ptr rgx::_position_node::generateNFA() {
     auto startNode = make_shared<_NFA_Node>();
     auto finishNode = make_shared<_NFA_Node>();
+    auto newEdge = startNode->addPositionEdge(finishNode);
+    newEdge->position = position;
     return make_shared<_NFA>(startNode, finishNode);
 }
