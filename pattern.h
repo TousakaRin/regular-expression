@@ -26,6 +26,9 @@ public:
     virtual std::shared_ptr<matchObj> match(const std::u16string&) = 0;
     virtual std::shared_ptr<matchObj> search(const std::u16string&) = 0;
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&) = 0;
+    virtual void traversal();
+    void err();
+    void err(const std::string&);
 };
 
 class dfa_pattern : public pattern {
@@ -34,15 +37,18 @@ public:
     virtual std::shared_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
+    virtual void traversal();
 };
 
 class nfa_pattern : public pattern {
 public:
     nfa_pattern (const _ast&); 
     std::shared_ptr<_NFA_Node> startNode;
+    std::shared_ptr<_NFA_Node> finishNode;
     virtual std::shared_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
+    virtual void traversal();
 };
 
 }

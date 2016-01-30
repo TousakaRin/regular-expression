@@ -1,6 +1,7 @@
 #include "ast.h"
 #include <iostream>
 #include "stringTools.h"
+#include "rgx.h"
 
 #define _ast_test_
 
@@ -17,7 +18,8 @@ int main() {
     string s = u8"[123456\\W]?";
     _ast t(s);
     cout << s << endl;
-    astTraversal(t);
+    auto pattern1 = rgx::compile(s);
+//    astTraversal(t);
     
 #endif
 

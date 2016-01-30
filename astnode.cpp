@@ -264,7 +264,14 @@ string rgx::_numCount_node::toString() {
 
 
 _NFA_ptr rgx::_numCount_node::generateNFA() {
-    return nullptr;
+    auto startNode = make_shared<_NFA_Node>();
+    auto child = left->generateNFA();
+    auto loopStart = startNode->addLoopStartEdge(child->first);
+    auto loopEnd = child->second->addLoopEndEdge(child->first);
+    loopEnd->lowerLoopTimes = lower;
+    loopEnd->upperLoopTimes = upper;
+    loopEnd->greedy = greedy;
+    return make_shared<_NFA>(startNode, child->second);
 }
 
 /*-----------------------------------------------*/
