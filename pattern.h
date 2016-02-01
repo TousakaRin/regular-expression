@@ -45,6 +45,7 @@ public:
     nfa_pattern (const _ast&); 
     std::shared_ptr<_NFA_Node> startNode;
     std::shared_ptr<_NFA_Node> finishNode;
+    void generateNFA();
     virtual std::shared_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);

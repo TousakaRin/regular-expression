@@ -22,12 +22,13 @@ class _numCount_node;
 class _preRead_node;
 class _astNode {
 public:
+    _astNode();
     std::shared_ptr<_astNode> left, right;
-    _NFA_ptr leftNFA, rightNFA;          //加上它是为了在生成NFA时更方便的使用非递归算法
+    _NFA_ptr nfa;                         //加上它是为了在生成NFA时更方便的使用非递归算法
     void err(const std::string&);
     void err();
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA();      //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
+    virtual void generateNFA();      //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
     virtual ~_astNode();  
 };
 
@@ -38,7 +39,7 @@ public:
 class _or_node : public _astNode {
 public:
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 
@@ -72,7 +73,7 @@ public:
     bool inversion;
 
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 
@@ -82,7 +83,7 @@ public:
 class _cat_node : public _astNode {
 public:
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 
@@ -112,7 +113,7 @@ public:
     unsigned int captureIndex;
     std::u16string name;
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 
@@ -126,7 +127,7 @@ public:
     _reference_node(unsigned int);
     _reference_node(unsigned int, const std::u16string&);
     virtual std::string toString();
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 
@@ -143,7 +144,7 @@ public:
     int lower, upper;
     virtual std::string toString();
     std::shared_ptr<_preRead_node> pre_read, post_read;
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 
@@ -156,7 +157,7 @@ public:
     _position_node(position_type);
     virtual std::string toString();
     std::string positionString();
-    virtual _NFA_ptr generateNFA();
+    virtual void generateNFA();
 };
 
 

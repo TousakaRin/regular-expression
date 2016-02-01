@@ -19,6 +19,7 @@ int main() {
     _ast t(s);
     cout << s << endl;
     auto pattern1 = rgx::compile(s);
+    pattern1->traversal();
 //    astTraversal(t);
     
 #endif

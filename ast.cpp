@@ -21,7 +21,7 @@ void rgx::_ast::err() {
 }
 
 
-rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_dfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _captureIndex(0) , edgeMgr(make_shared<edgeManager>()) {
+rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_nfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _captureIndex(0) , edgeMgr(make_shared<edgeManager>()) {
     _root = re_term();
     if (_root != nullptr && _pos < _re.size()) {
         err();
