@@ -21,7 +21,7 @@ void rgx::_ast::err() {
 }
 
 
-rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_nfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _captureIndex(0) , edgeMgr(make_shared<edgeManager>()) {
+rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_nfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _captureIndex(0) , _edgeMgr(make_shared<_edgeManager>()) {
     _root = re_term();
     if (_root != nullptr && _pos < _re.size()) {
         err();
@@ -41,8 +41,8 @@ shared_ptr<_astNode> rgx::_ast::re_term() {
         // 出现'|' 之后，下一个必须是非空的or_term
         if (n) {
             auto newRoot = make_shared<_or_node>();
-            newRoot->left = r;
-            newRoot->right = n;
+            newRoot->_left = r;
+            newRoot->_right = n;
             r = newRoot;
         } else {
             // or_term 是可以正常为空的，所以需要在这里报错
@@ -76,8 +76,8 @@ shared_ptr<_astNode> rgx::_ast::or_term() {
         auto n = cat_term();
         if (n) {
             auto newRoot = make_shared<_cat_node>();
-            newRoot->left = r;
-            newRoot->right = n;
+            newRoot->_left = r;
+            newRoot->_right = n;
             r = newRoot;
         } else {
             //控制流到达这里说明出现了cat_term的前缀，但是却解析出错了
@@ -115,13 +115,13 @@ shared_ptr<_astNode> rgx::_ast::cat_term() {
         err();
         return nullptr;
     }
-    if (numt->lower == 1 && numt->upper == 1 && !pre && ! _post) {
+    if (numt->_lowerLoopTimes == 1 && numt->_upperLoopTimes == 1 && !pre && ! _post) {
         //若既没有正向预读，又没有反向预读，重复次数还为1，则没有生成numCount 节点的必要，直接返回r
         return r;
     } else {
-        numt->left = r;
-        numt->pre_read = pre;
-        numt->post_read = _post; 
+        numt->_left = r;
+        numt->_pre_read = pre;
+        numt->_post_read = _post; 
         return numt;
     }
 }
@@ -139,7 +139,7 @@ shared_ptr<_preRead_node> rgx::_ast::pre_read_term() {
         /*******************************/
         if (n && _pos < _re.size() && _re[_pos] == ')') {
             ++_pos;  //match ')'
-            r->dfaTree = n;
+            r->_dfaTree = n;
             return r;
         } else {
             err();
@@ -164,7 +164,7 @@ shared_ptr<_preRead_node> rgx::_ast::post_read_term() {
         /*******************************/
         if (n && _pos < _re.size() && _re[_pos] == ')') {
             ++_pos;  //match ')'
-            r->dfaTree = n;
+            r->_dfaTree = n;
             return r;
         } else {
             err();
@@ -228,14 +228,14 @@ shared_ptr<_astNode> rgx::_ast::charSet_term() {
         // single char
         // 处理'.', '.'出现在字符类中时，不具备特殊意义，所以只要在这里处理'.'
         if (_re[_pos] == '.') {
-            auto  r = make_shared<_charSet_node>(edgeMgr);;
+            auto  r = make_shared<_charSet_node>(_edgeMgr);;
             r->setInversison();
-            r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1), edgeMgr);
+            r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1));
             ++_pos;
             return r;
         }
-        auto r = make_shared<_charSet_node>(edgeMgr);;
-        r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1), edgeMgr);
+        auto r = make_shared<_charSet_node>(_edgeMgr);;
+        r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1));
         ++_pos;
         return r;
     }
@@ -343,7 +343,7 @@ bool rgx::_ast::charSetTrans(shared_ptr<_charSet_node> r) {
     } else if (_re[_pos] == 'S') {
         r->addUSpaceRange();
     } else if (_re[_pos] == '\\') {
-        r->addCharRange(pair<char16_t, char16_t>('\\', '\\' + 1), edgeMgr);
+        r->addCharRange(pair<char16_t, char16_t>('\\', '\\' + 1));
     } else {
         //无意义的转义，语法错误
         err();
@@ -375,7 +375,7 @@ shared_ptr<_capture_node> rgx::_ast::namedCapture() {
         if (_re[_pos] == '\\') {
             ++_pos;
         } 
-        r->name.push_back(_re[_pos]);
+        r->_captureName.push_back(_re[_pos]);
         ++_pos;
     }    // match'name'
     if (_pos < _re.size()) {
@@ -383,9 +383,9 @@ shared_ptr<_capture_node> rgx::_ast::namedCapture() {
         auto n = re_term();
         if (n && _pos < _re.size() && _re[_pos] == ')') {
             ++_pos;    //match ')'
-            r->left = n;
-            r->captureIndex = ++_captureIndex;
-            _nameMap[r->name] = _captureIndex;
+            r->_left = n;
+            r->_captureIndex = ++_captureIndex;
+            _nameMap[r->_captureName] = _captureIndex;
             return r;
         } else {
             err();
@@ -404,8 +404,8 @@ shared_ptr<_capture_node> rgx::_ast::unnamedCapture() {
     auto n = re_term();
     if (n && _pos < _re.size() && _re[_pos] == ')') {
         ++_pos;  //match')'
-        r->captureIndex = ++_captureIndex;
-        r->left = n;
+        r->_captureIndex = ++_captureIndex;
+        r->_left = n;
         return r;
     } else {
         err();
@@ -415,7 +415,7 @@ shared_ptr<_capture_node> rgx::_ast::unnamedCapture() {
 
 shared_ptr<_charSet_node> rgx::_ast::charClass() {
     //进入函数之前判断前缀
-    auto r = make_shared<_charSet_node>(edgeMgr);;
+    auto r = make_shared<_charSet_node>(_edgeMgr);;
     ++_pos; //match '['
 
     //匹配在[]内作为第一个字符的'^'或'-'
@@ -442,13 +442,13 @@ shared_ptr<_charSet_node> rgx::_ast::charClass() {
                 err();
                 return nullptr;
             }
-            r->addCharRange(pair<char16_t, char16_t>(pre, _re[_pos] + 1), edgeMgr);
+            r->addCharRange(pair<char16_t, char16_t>(pre, _re[_pos] + 1));
             ++_pos;
         } else if (_pos >= _re.size()) {
             err();
             return nullptr;
         } else {
-            r->addCharRange(pair<char16_t, char16_t>(pre, pre + 1), edgeMgr);
+            r->addCharRange(pair<char16_t, char16_t>(pre, pre + 1));
         }
     }
     if (_pos < _re.size() && _re[_pos] == ']') {
@@ -463,7 +463,7 @@ shared_ptr<_charSet_node> rgx::_ast::charClass() {
 shared_ptr<_astNode> rgx::_ast::normalTrans() {
     // 入函数之前判断前缀
     ++_pos;           //match '\'
-    auto r = make_shared<_charSet_node>(edgeMgr);;
+    auto r = make_shared<_charSet_node>(_edgeMgr);;
     if (_pos >= _re.size()) {
         err();
         return nullptr;
@@ -495,7 +495,7 @@ shared_ptr<_astNode> rgx::_ast::normalTrans() {
         r->addUSpaceRange();
     } else {
         //转义关键字
-        r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1), edgeMgr);
+        r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1));
     }
     ++_pos;  // match tranChar
     return r;

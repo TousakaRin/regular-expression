@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include "matchObj.h"
+#include "edgeManager.h"
 
 namespace rgx{
 
@@ -21,7 +22,7 @@ namespace rgx{
 class _NFA_Node;
 class _ast;
 
-class pattern {
+class _pattern {
 public:
     virtual std::shared_ptr<matchObj> match(const std::u16string&) = 0;
     virtual std::shared_ptr<matchObj> search(const std::u16string&) = 0;
@@ -31,18 +32,20 @@ public:
     void err(const std::string&);
 };
 
-class dfa_pattern : public pattern {
+class _dfa_pattern : public _pattern {
 public:
-    dfa_pattern (const _ast&);
+    _dfa_pattern (const _ast&);
     virtual std::shared_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
     virtual void traversal();
+private:
+    std::shared_ptr<_edgeManager> _edgeMgr;
 };
 
-class nfa_pattern : public pattern {
+class _nfa_pattern : public _pattern {
 public:
-    nfa_pattern (const _ast&); 
+    _nfa_pattern (const _ast&); 
     std::shared_ptr<_NFA_Node> startNode;
     std::shared_ptr<_NFA_Node> finishNode;
     void generateNFA();
@@ -50,6 +53,8 @@ public:
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
     virtual void traversal();
+private:
+    std::shared_ptr<_edgeManager> _edgeMgr;
 };
 
 }

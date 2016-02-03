@@ -17,7 +17,7 @@ string rgx::_NFA_Edge::toString() {
 
 /*================================epsilonEdge==========================================*/
 
-string rgx::epsilonEdge::toString() {
+string rgx::_epsilonEdge::toString() {
     string info;
     info += "\n\n epsilonEdge \n\n";
     return info;
@@ -26,39 +26,41 @@ string rgx::epsilonEdge::toString() {
 
 /*===================================charSetEdge=======================================*/
 
-string rgx::charSetEdge::toString() {
+string rgx::_charSetEdge::toString() {
     string info;
     info += "\n\n charSetEdge \n";
-    for (auto i : acceptSet) {
+    for (auto i : _acceptSet) {
         info += int2string(i) + " ";
     }
-    info += "\n delete_OPT" + int2string(delOPT);
+    info += "\n delete_OPT " + int2string(_delOPT);
     info += "\n\n";
     return info;
 }
 
 /*================================loopStartEdge===========================================*/
 
-string rgx::loopStartEdge::toString() {
+string rgx::_loopStartEdge::toString() {
     string info;
     info += "\n\n loopStartEdge \n\n";
+    info += " loopTimes : " + int2string(_lowerLoopTimes) + "  " + int2string(_upperLoopTimes) + "\n";
+    info += " greedy : " + bool2string(_greedy) + "\n";
     return info;
 }
 
 /*===================================loopEndEdge==========================================*/
 
-string rgx::loopEndEdge::toString() {
+string rgx::_loopEndEdge::toString() {
     string info;
     info += "\n\n loopEndEdge \n";
-    info += " loopTimes : " + int2string(lowerLoopTimes) + "  " + int2string(upperLoopTimes) + "\n";
-    info += " greedy : " + bool2string(greedy) + "\n";
+    info += " loopTimes : " + int2string(_lowerLoopTimes) + "  " + int2string(_upperLoopTimes) + "\n";
+    info += " greedy : " + bool2string(_greedy) + "\n";
     return info;
 }
 
 
 /*================================captureStart===========================================*/
 
-string rgx::captureStartEdge::toString() {
+string rgx::_captureStartEdge::toString() {
     string info;
     info += "\n\n captureStartEdge\n";
     return info;
@@ -67,10 +69,10 @@ string rgx::captureStartEdge::toString() {
 
 /*==============================captureEndEdge===========================================*/
 
-string rgx::captureEndEdge::toString() {
+string rgx::_captureEndEdge::toString() {
     string info;
-    info += "\n\n captureStartEdge \n";
-    info += " captureIndex : " + int2string(referenceIndex) + "\n";
+    info += "\n\n captureEndEdge \n";
+    info += " captureIndex : " + int2string(_captureIndex) + "\n";
     return info;
 }
 
@@ -78,19 +80,19 @@ string rgx::captureEndEdge::toString() {
 
 /*===============================referenceEdge============================================*/
 
-string rgx::referenceEdge::toString() {
+string rgx::_referenceEdge::toString() {
     string info;
-    info += "\n\n captureEndEdge \n";
-    info += " captureIndex : " + int2string(referenceIndex) + "\n\n";
+    info += "\n\n referenceEdge\n";
+    info += " referenceIndex: " + int2string(_referenceIndex) + "\n\n";
     return info;
 }
 
 
 /*================================epsilonEdge===========================================*/
 
-string rgx::positionEdge::toString() {
+string rgx::_positionEdge::toString() {
     string info;
     info += "\n\n positionEdge \n";
-    info += " position_type : " + int2string(position) + "\n\n";
+    info += " position_type : " + int2string(_position) + "\n\n";
     return info;
 }

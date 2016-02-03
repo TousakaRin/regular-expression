@@ -6,16 +6,16 @@
 namespace rgx {
 
 class _charSet_node;
-class edgeManager {
+class _edgeManager {
     friend _charSet_node;
 public: 
     enum {_ENCODE_LENGTH = 65536};
-    edgeManager();
+    _edgeManager();
     void addRange(const std::pair<char16_t, char16_t>&);
     unsigned int getIndex(char16_t); 
 private:
     std::array<unsigned int, _ENCODE_LENGTH> _hashTable;
-    unsigned int maxEdegs; 
+    unsigned int _maxEdegs; 
 };
 
 }

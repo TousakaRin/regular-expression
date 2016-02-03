@@ -6,24 +6,17 @@
 using namespace rgx;
 using namespace std;
 
-shared_ptr<pattern> rgx::compile(const string & re) {
+shared_ptr<_pattern> rgx::compile(const string & re) {
     _ast ast(re);
+    astTraversal(ast);
     if (ast._build_type == _ast::build_to_dfa) {
-        return make_shared<dfa_pattern>(ast);
+        return make_shared<_dfa_pattern>(ast);
     } else {
-        return make_shared<nfa_pattern>(ast);
+        return make_shared<_nfa_pattern>(ast);
     }
 }
 
 void rgx::astTraversal(const _ast& ast) {
-    //auto r = ast.root;
-    //cout << r->toString();
-    //if (r->left) {
-    //    cout << r->left->toString() << endl;
-    //}
-    //if (r->right) {
-    //    cout << r->right->toString() << endl;
-    //}
     auto r = ast._root;
     stack<decltype(r)> s;    
     if (r) {
@@ -35,11 +28,13 @@ void rgx::astTraversal(const _ast& ast) {
         auto e = s.top();
         s.pop();
         cout << e->toString();
-        if (e->right) {
-            s.push(e->right);
+        if (e->_right) {
+            s.push(e->_right);
         }
-        if (e->left) {
-            s.push(e->left);
+        if (e->_left) {
+            s.push(e->_left);
         }
     }
+
+    cout << "+++++++++++++++++++++++++++++++-----------astTraversalEnd-------------++++++++++++++++++++++++++++++++++++++++++\n" << endl;
 }

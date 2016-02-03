@@ -1,5 +1,6 @@
 #include "ast.h"
 #include <iostream>
+#include "testCase.h"
 #include "stringTools.h"
 #include "rgx.h"
 
@@ -12,16 +13,12 @@ int main() {
     cout << "\n\n++++++++++++-------------无敌叼炸天的测试程序-------------++++++++++++\n" << endl;
 
 #ifdef _ast_test_
-
-//     string s = L"(?<!反向预读君)(?:括号君|(?P<捕获君>WTF?)){45-78}(?=预读君)连接君(?P=捕获君)";
-//     string s = u8"(?<!nozuonodie)(?P<抓你啊>^卧槽？){9-18}?(?!whyyoutry)";
-    string s = u8"[123456\\W]?";
-    _ast t(s);
-    cout << s << endl;
-    auto pattern1 = rgx::compile(s);
-    pattern1->traversal();
-//    astTraversal(t);
     
+    for (auto &s : testCase) {
+        cout << "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" << s << endl;
+        auto pattern = compile(s);
+        pattern->traversal();
+    }
 #endif
 
     return 0;

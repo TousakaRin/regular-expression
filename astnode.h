@@ -12,8 +12,8 @@
 namespace rgx {
 
 class _NFA_Node;
-typedef std::shared_ptr<std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>>>  _NFA_ptr;
 typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
+typedef std::shared_ptr<_NFA>  _NFA_ptr;
 typedef std::shared_ptr<_DFA_Table>  _DFA_ptr;
 
 /*-----------------------------------------------*/
@@ -23,8 +23,8 @@ class _preRead_node;
 class _astNode {
 public:
     _astNode();
-    std::shared_ptr<_astNode> left, right;
-    _NFA_ptr nfa;                         //加上它是为了在生成NFA时更方便的使用非递归算法
+    std::shared_ptr<_astNode> _left, _right;
+    _NFA_ptr _nfa;                         //加上它是为了在生成NFA时更方便的使用非递归算法
     void err(const std::string&);
     void err();
     virtual std::string toString();
@@ -49,16 +49,16 @@ public:
 class _charSet_node: public _astNode {
 public:    
     _charSet_node(char16_t);
-    _charSet_node(std::shared_ptr<edgeManager>);
+    _charSet_node(std::shared_ptr<_edgeManager>);
     //每一个pair表示一个范围
     //范围内的每一个字符由'|'连接
     //如pair{a, c + 1} === [a-c] === (?:a|b|c)
     //deleteOPT 表示\W, \S, \D三个集合
     enum deleteOPT {NO_WORD = 0x1, NO_DIGIT = 0x10, NO_SPACE = 0x100};
-    unsigned int delOPT;
-    std::weak_ptr<edgeManager> edgeMgr;
-    std::vector<std::pair<char16_t, char16_t>> charset;
-    void addCharRange(const std::pair<char16_t, char16_t>&, std::shared_ptr<edgeManager>);
+    unsigned int _delOPT;
+    std::weak_ptr<_edgeManager> _edgeMgr;
+    std::vector<std::pair<char16_t, char16_t>> _acceptSet;
+    void addCharRange(const std::pair<char16_t, char16_t>&);
 
     void addWordRange();
     void addUWordRange();
@@ -97,7 +97,7 @@ public:
     _preRead_node(bool);
     _preRead_node(std::shared_ptr<_astNode>, bool);
     bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
-    std::shared_ptr<_astNode> dfaTree;
+    std::shared_ptr<_astNode> _dfaTree;
     std::string toString();
     _DFA_ptr generateDFA();
 };
@@ -110,8 +110,8 @@ public:
 
 class _capture_node : public _astNode {
 public:    
-    unsigned int captureIndex;
-    std::u16string name;
+    unsigned int _captureIndex;
+    std::u16string _captureName;
     virtual std::string toString();
     virtual void generateNFA();
 };
@@ -122,8 +122,8 @@ public:
 /*-----------------------------------------------*/
 class _reference_node : public _astNode {
 public:
-    std::u16string name;
-    unsigned int index;
+    std::u16string _referenceName;
+    unsigned int _referenceIndex;
     _reference_node(unsigned int);
     _reference_node(unsigned int, const std::u16string&);
     virtual std::string toString();
@@ -140,10 +140,10 @@ public:
     _numCount_node();
     _numCount_node(int, int);
     _numCount_node(int, int, bool);
-    bool greedy;
-    int lower, upper;
+    bool _greedy;
+    int _lowerLoopTimes, _upperLoopTimes;
     virtual std::string toString();
-    std::shared_ptr<_preRead_node> pre_read, post_read;
+    std::shared_ptr<_preRead_node> _pre_read, _post_read;
     virtual void generateNFA();
 };
 
@@ -153,7 +153,7 @@ public:
 
 class _position_node : public _astNode {
 public:
-    enum position_type {LINE_BEGIN, LINE_END, STRING_BEGIN, STRING_END, BREAK_OFF, NO_BREAK_OFF} position;
+    enum position_type {LINE_BEGIN, LINE_END, STRING_BEGIN, STRING_END, BREAK_OFF, NO_BREAK_OFF} _position;
     _position_node(position_type);
     virtual std::string toString();
     std::string positionString();

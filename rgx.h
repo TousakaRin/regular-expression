@@ -15,7 +15,7 @@ namespace rgx {
  */
 
 
-std::shared_ptr<pattern> compile (const std::string& regular_expression);
+std::shared_ptr<_pattern> compile (const std::string& regular_expression);
 
 void astTraversal(const _ast& ast);
 
