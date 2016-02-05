@@ -9,6 +9,10 @@ unsigned int rgx::_edgeManager::getIndex(char16_t c) {
 }
 
 
+int rgx::_edgeManager::statsCount() {
+    return _maxEdegs;    
+}
+
 void rgx::_edgeManager::addRange(const pair<char16_t, char16_t>& range) {
     int left = static_cast<int>(range.first), right = static_cast<int>(range.second);
     if (left != 0 && _hashTable[left - 1] == _hashTable[left]) {
@@ -33,7 +37,7 @@ void rgx::_edgeManager::addRange(const pair<char16_t, char16_t>& range) {
     }
 }
 
-rgx::_edgeManager::_edgeManager() : _hashTable() , _maxEdegs(0) {
+rgx::_edgeManager::_edgeManager() :  _hashTable() , _maxEdegs(0) {
     for (size_t i = 0; i < _ENCODE_LENGTH; ++i) {
         _hashTable[i] = 0;
     } 

@@ -6,15 +6,14 @@
 #include <vector>
 #include "edgeManager.h"
 #include "stringTools.h"
-#include "dfaTable.h"
 
 
 namespace rgx {
 
 class _NFA_Node;
+class _pattern;
 typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
 typedef std::shared_ptr<_NFA>  _NFA_ptr;
-typedef std::shared_ptr<_DFA_Table>  _DFA_ptr;
 
 /*-----------------------------------------------*/
 
@@ -24,11 +23,11 @@ class _astNode {
 public:
     _astNode();
     std::shared_ptr<_astNode> _left, _right;
-    _NFA_ptr _nfa;                         //加上它是为了在生成NFA时更方便的使用非递归算法
+    _NFA_ptr _NFAptr;                         //加上它是为了在生成NFA时更方便的使用非递归算法
     void err(const std::string&);
     void err();
     virtual std::string toString();
-    virtual void generateNFA();      //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
+    virtual void generateNFA(_pattern&);      //永远不应该调用这个方法，此处不作为纯虚函数，仅用于方便调试
     virtual ~_astNode();  
 };
 
@@ -39,7 +38,7 @@ public:
 class _or_node : public _astNode {
 public:
     virtual std::string toString();
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 
@@ -73,7 +72,7 @@ public:
     bool inversion;
 
     virtual std::string toString();
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 
@@ -83,7 +82,7 @@ public:
 class _cat_node : public _astNode {
 public:
     virtual std::string toString();
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 
@@ -99,7 +98,7 @@ public:
     bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
     std::shared_ptr<_astNode> _dfaTree;
     std::string toString();
-    _DFA_ptr generateDFA();
+    void generateDFA(_pattern&);
 };
 
 
@@ -113,7 +112,7 @@ public:
     unsigned int _captureIndex;
     std::u16string _captureName;
     virtual std::string toString();
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 
@@ -127,7 +126,7 @@ public:
     _reference_node(unsigned int);
     _reference_node(unsigned int, const std::u16string&);
     virtual std::string toString();
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 
@@ -144,7 +143,7 @@ public:
     int _lowerLoopTimes, _upperLoopTimes;
     virtual std::string toString();
     std::shared_ptr<_preRead_node> _pre_read, _post_read;
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 
@@ -157,7 +156,7 @@ public:
     _position_node(position_type);
     virtual std::string toString();
     std::string positionString();
-    virtual void generateNFA();
+    virtual void generateNFA(_pattern&);
 };
 
 

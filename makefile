@@ -23,7 +23,7 @@ matchObj.o : matchObj.h \
 	matchObj.cpp
 	g++-5 -c $(flag) matchObj.cpp
 
-pattern.o : ast.h pattern.h  nfaNode.h \
+pattern.o : ast.h pattern.h  nfaNode.h nfaEdge.h astnode.h\
 	pattern.cpp
 	g++-5 -c $(flag) pattern.cpp
 
@@ -33,19 +33,15 @@ rgx.o : rgx.h\
 
 edgeManager.o : edgeManager.h \
 	edgeManager.cpp
-	g++-5 -c  $(flag) edgeManager.cpp
+	g++-5 -c $(flag) edgeManager.cpp
 
 nfaEdge.o : nfaEdge.h \
 	nfaEdge.cpp
 	g++-5 -c $(flag) nfaEdge.cpp
 
-nfaNode.o : nfaEdge.h nfaNode.h \
+nfaNode.o : ast.h pattern.h nfaEdge.h nfaNode.h \
 	nfaNode.cpp
 	g++-5 -c $(flag) nfaNode.cpp
-
-dfaTable.o : dfaTable.h \
-	dfaTable.cpp
-	g++-5 -c $(flag) dfaTable.cpp
 
 clean :
 	rm test *.o

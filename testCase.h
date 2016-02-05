@@ -13,6 +13,6 @@ std::vector<std::string> testCase = {
 //    u8"\\(\\)",
 //    u8"(abc)*?def",
 //    u8"(?P<namedCapture>abc)*?\\?def"
-    u8"(?P<namedCapture>ab)*(?P=namedCapture)e"
+    u8"(?P<namedCapture>a|b)*(?P=namedCapture)e"
 };
 #endif

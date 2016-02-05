@@ -8,6 +8,7 @@ namespace rgx {
 
 /******************前置声明*********************/
 
+class _pattern;
 class _NFA_Edge;
 class _epsilonEdge;
 class _charSetEdge;
@@ -21,7 +22,8 @@ class _positionEdge;
 /******************前置声明*********************/
 class _NFA_Node {
 public: 
-    _NFA_Node();
+    unsigned int id;
+    _NFA_Node(_pattern&);
     std::vector<std::shared_ptr<_NFA_Edge>> edges;
     std::shared_ptr<_epsilonEdge> addEpsilonEdge(std::shared_ptr<_NFA_Node>);
     std::shared_ptr<_charSetEdge> addCharSetEdge(std::shared_ptr<_NFA_Node>);

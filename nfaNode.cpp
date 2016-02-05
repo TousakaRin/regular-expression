@@ -1,11 +1,13 @@
 #include "nfaNode.h"
+#include "pattern.h"
 #include "nfaEdge.h"
+#include "ast.h"
 
 using namespace std;
 using namespace rgx;
 
-rgx::_NFA_Node::_NFA_Node() {
-
+rgx::_NFA_Node::_NFA_Node(_pattern& p) {
+    id = p._NFA_nodeCount++;
 }
 
 shared_ptr<_epsilonEdge>rgx::_NFA_Node::addEpsilonEdge(shared_ptr<_NFA_Node> goalNode) {

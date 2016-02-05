@@ -28,13 +28,14 @@ class _position_node;
 
 class _ast {
     friend void rgx::astTraversal(const _ast&);
-    friend class _dfa_pattern;
-    friend class _nfa_pattern;
+    friend class _pattern;
+
 public:
     enum {build_to_dfa, build_to_nfa} _build_type;                                 //转换标记，表示该ast可以转换成NFA还是DFA
     _ast(const std::string &regular_expression);
     _ast(const _ast&) = delete;
     ~_ast();
+
 private:
     std::shared_ptr<_astNode> re_term();                                           //处理整个正则xxx或括号中的子句
     std::shared_ptr<_astNode> or_term();                                           //处理'|'语法

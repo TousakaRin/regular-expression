@@ -11,7 +11,7 @@ using namespace rgx;
 
 /*-----------------------------------------------*/
 
-rgx::_astNode::_astNode() : _nfa(nullptr) {
+rgx::_astNode::_astNode() : _NFAptr(nullptr) {
 
 }
 
@@ -21,7 +21,7 @@ string rgx::_astNode::toString() {
     return info;
 }
 
-void rgx::_astNode::generateNFA() {
+void rgx::_astNode::generateNFA(_pattern&) {
     cout << "\nan error occured !!!!\ninformation:" << endl;
     cout << toString();
 }
@@ -50,30 +50,30 @@ string rgx::_or_node::toString() {
 }
 
 
-void rgx::_or_node::generateNFA() {
+void rgx::_or_node::generateNFA(_pattern& pattern) {
     // 首先新建开始与完成节点
     cout << "or_node_generate_NFA\n" << endl;
-    auto startNode = make_shared<_NFA_Node>(); 
-    auto finishNode = make_shared<_NFA_Node>();
+    auto startNode = make_shared<_NFA_Node>(pattern); 
+    auto finishNode = make_shared<_NFA_Node>(pattern);
 
-    if (!_left || !_left->_nfa) {
+    if (!_left || !_left->_NFAptr) {
         cout << toString() << endl;
         err(" 生成nfa时出错 ");
     }
-    if (!_right || !_right->_nfa) {
+    if (!_right || !_right->_NFAptr) {
         cout << toString() << endl;
         err(" 生成nfa时出错 ");
     }
 
     //从startNode出发，新建两条epsilon边分别指向两个子节点NFA
-    startNode->addEpsilonEdge(_left->_nfa->first);
-    startNode->addEpsilonEdge(_right->_nfa->first);
+    startNode->addEpsilonEdge(_left->_NFAptr->first);
+    startNode->addEpsilonEdge(_right->_NFAptr->first);
 
     //将两个子节点的finishNode各新建一条epsilon边指向生成的finishNode
-    _left->_nfa->second->addEpsilonEdge(finishNode);
-    _right->_nfa->second->addEpsilonEdge(finishNode);
+    _left->_NFAptr->second->addEpsilonEdge(finishNode);
+    _right->_NFAptr->second->addEpsilonEdge(finishNode);
 
-    _nfa = make_shared<_NFA>(startNode, finishNode); 
+    _NFAptr = make_shared<_NFA>(startNode, finishNode); 
 }
 
 /*-----------------------------------------------*/
@@ -174,13 +174,13 @@ string rgx::_charSet_node::toString() {
     return info; 
 }
 
-void rgx::_charSet_node::generateNFA() {
+void rgx::_charSet_node::generateNFA(_pattern& pattern) {
     cout << "charSet_node_generate_NFA\n" << endl;
     if (_left || _right) {
         err(" charSet出现孩子节点 ");
     }
-    auto startNode = make_shared<_NFA_Node>();
-    auto finishNode = make_shared<_NFA_Node>();
+    auto startNode = make_shared<_NFA_Node>(pattern);
+    auto finishNode = make_shared<_NFA_Node>(pattern);
     auto newEdge = startNode->addCharSetEdge(finishNode);
     newEdge->_delOPT = _delOPT;
     if (auto p = _edgeMgr.lock()) {
@@ -197,7 +197,7 @@ void rgx::_charSet_node::generateNFA() {
     } else {
         err("in function rgx::_charSet_node::generateNFA()  \n\n 找不到对象: _edgeMgr \n\n");
     }
-    _nfa = make_shared<_NFA>(startNode, finishNode);
+    _NFAptr = make_shared<_NFA>(startNode, finishNode);
 }
 
 
@@ -219,8 +219,7 @@ string rgx::_preRead_node::toString() {
 }
 
 
-_DFA_ptr rgx::_preRead_node::generateDFA() {
-    return nullptr;
+void rgx::_preRead_node::generateDFA(_pattern&) {
 }
 
 
@@ -243,16 +242,16 @@ string rgx::_reference_node::toString() {
 }
 
 
-void rgx::_reference_node::generateNFA() {
+void rgx::_reference_node::generateNFA(_pattern& pattern) {
     cout << "reference_node_generate_NFA\n" << endl;
     if (_left || _right) {
         err(" referenceNode出现子节点 ");
     }
-    auto startNode = make_shared<_NFA_Node>();
-    auto finishNode = make_shared<_NFA_Node>();
+    auto startNode = make_shared<_NFA_Node>(pattern);
+    auto finishNode = make_shared<_NFA_Node>(pattern);
     auto newEdge = startNode->addReferenceEdge(finishNode);
     newEdge->_referenceIndex = _referenceIndex;
-    _nfa = make_shared<_NFA>(startNode, finishNode);
+    _NFAptr = make_shared<_NFA>(startNode, finishNode);
 }
 
 
@@ -286,14 +285,15 @@ string rgx::_numCount_node::toString() {
 }
 
 
-void rgx::_numCount_node::generateNFA() {
+void rgx::_numCount_node::generateNFA(_pattern& pattern) {
     cout << "numCount_node_generate_NFA\n" << endl;
-    if (!_left || (_left && !_left->_nfa) || _right) {
+    if (!_left || (_left && !_left->_NFAptr) || _right) {
         cout << toString() << endl;
         err(" 生成NFA时出错 ");
     } 
-    auto child = _left->_nfa;
-    auto loopStart = child->first->addLoopStartEdge(child->second);
+    auto child = _left->_NFAptr;
+    auto startNode = make_shared<_NFA_Node>(pattern);
+    auto loopStart = startNode->addLoopStartEdge(child->first);
     auto loopEnd = child->second->addLoopEndEdge(child->first);
     loopStart->_lowerLoopTimes  = _lowerLoopTimes;
     loopStart->_upperLoopTimes = _upperLoopTimes;
@@ -301,7 +301,7 @@ void rgx::_numCount_node::generateNFA() {
     loopEnd->_lowerLoopTimes = _lowerLoopTimes;
     loopEnd->_upperLoopTimes = _upperLoopTimes;
     loopEnd->_greedy = _greedy;
-    _nfa = make_shared<_NFA>(child->first, child->second);
+    _NFAptr = make_shared<_NFA>(startNode, child->second);
 }
 
 /*-----------------------------------------------*/
@@ -315,20 +315,20 @@ string rgx::_capture_node::toString() {
     return info;
 }
 
-void rgx::_capture_node::generateNFA() {
+void rgx::_capture_node::generateNFA(_pattern& pattern) {
     cout << "captureCount_node_generate_NFA\n" << endl;
-    if (!_left || !_left->_nfa || _right) {
+    if (!_left || !_left->_NFAptr || _right) {
         cout << toString() << endl;
         err(" 生成NFA时出错 ");
     }
-    auto startNode = make_shared<_NFA_Node>();
-    auto finishNode = make_shared<_NFA_Node>();
-    auto child = _left->_nfa;
+    auto startNode = make_shared<_NFA_Node>(pattern);
+    auto finishNode = make_shared<_NFA_Node>(pattern);
+    auto child = _left->_NFAptr;
     auto captureStart = startNode->addCaptureStartEdge(child->first);
     auto captureEnd = child->second->addCaptureEndEdge(finishNode);
     captureStart->_captureIndex = _captureIndex;
     captureEnd->_captureIndex = _captureIndex;
-    _nfa = make_shared<_NFA>(startNode, finishNode);
+    _NFAptr = make_shared<_NFA>(startNode, finishNode);
 }
 
 /*-----------------------------------------------*/
@@ -339,16 +339,16 @@ string rgx::_cat_node::toString() {
     return info;
 }
 
-void rgx::_cat_node::generateNFA() {
+void rgx::_cat_node::generateNFA(_pattern&) {
     cout << "cat_node_generate_NFA\n" << endl;
-    if (!_left || !_left->_nfa || !_right || !_right->_nfa) {
+    if (!_left || !_left->_NFAptr || !_right || !_right->_NFAptr) {
         cout << toString() << endl;
         err(" 生成NFA 时出错 ");
     }
-    auto leftChild = _left->_nfa;
-    auto rightChild = _right->_nfa;
+    auto leftChild = _left->_NFAptr;
+    auto rightChild = _right->_NFAptr;
     leftChild->second->addEpsilonEdge(rightChild->first);
-    _nfa = make_shared<_NFA>(leftChild->first, rightChild->second);
+    _NFAptr = make_shared<_NFA>(leftChild->first, rightChild->second);
 }
 
 /*-----------------------------------------------*/
@@ -383,15 +383,15 @@ string rgx::_position_node::positionString() {
     }
 }
 
-void rgx::_position_node::generateNFA() {
+void rgx::_position_node::generateNFA(_pattern& pattern) {
     cout << "position_node_generate_NFA\n" << endl;
     if (_left || _right) {
         cout << toString() << endl;
         err(" _position_node 出现字节点 ");
     }
-    auto startNode = make_shared<_NFA_Node>();
-    auto finishNode = make_shared<_NFA_Node>();
+    auto startNode = make_shared<_NFA_Node>(pattern);
+    auto finishNode = make_shared<_NFA_Node>(pattern);
     auto newEdge = startNode->addPositionEdge(finishNode);
     newEdge->_position = _position;
-    _nfa = make_shared<_NFA>(startNode, finishNode);
+    _NFAptr = make_shared<_NFA>(startNode, finishNode);
 }

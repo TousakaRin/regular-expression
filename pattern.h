@@ -22,14 +22,30 @@ namespace rgx{
 class _NFA_Node;
 class _ast;
 
+typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
+typedef std::shared_ptr<_NFA>  _NFA_ptr;
+typedef std::vector<std::vector<unsigned int>> _DFA;
+typedef std::shared_ptr<_DFA> _DFA_ptr;
+
+
 class _pattern {
+    friend class _NFA_Node;
 public:
+    _pattern(const _ast&);
     virtual std::shared_ptr<matchObj> match(const std::u16string&) = 0;
     virtual std::shared_ptr<matchObj> search(const std::u16string&) = 0;
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&) = 0;
-    virtual void traversal();
+    void traversal();                                      // 广度优先对NFA进行遍历, 用于debug- -
     void err();
     void err(const std::string&);
+
+protected:
+    std::shared_ptr<_edgeManager> _edgeMgr;
+    _NFA_ptr _NFAptr;
+    unsigned int _NFA_nodeCount;         //计算NFA节点的数量，同时为每个NFA节点分配一个唯一的ID, 加速后续算法
+
+private:
+    void epsilonCut();               //除去不必要的epsilon边
 };
 
 class _dfa_pattern : public _pattern {
@@ -38,9 +54,7 @@ public:
     virtual std::shared_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
-    virtual void traversal();
-private:
-    std::shared_ptr<_edgeManager> _edgeMgr;
+    _DFA_ptr _DFAptr;
 };
 
 class _nfa_pattern : public _pattern {
@@ -52,9 +66,6 @@ public:
     virtual std::shared_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
-    virtual void traversal();
-private:
-    std::shared_ptr<_edgeManager> _edgeMgr;
 };
 
 }

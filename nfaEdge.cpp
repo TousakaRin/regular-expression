@@ -9,7 +9,7 @@ using namespace std;
 
 string rgx::_NFA_Edge::toString() {
     string info;
-    info += "\n\n _NFA_Node \n";
+    info += "\n _NFA_Node \n";
     info += " an error occured \n";
     info += " this function should never be called \n\n";
     return info;
@@ -19,7 +19,7 @@ string rgx::_NFA_Edge::toString() {
 
 string rgx::_epsilonEdge::toString() {
     string info;
-    info += "\n\n epsilonEdge \n\n";
+    info += "\n epsilonEdge \n";
     return info;
 }
 
@@ -28,12 +28,12 @@ string rgx::_epsilonEdge::toString() {
 
 string rgx::_charSetEdge::toString() {
     string info;
-    info += "\n\n charSetEdge \n";
+    info += "\n charSetEdge \n ";
     for (auto i : _acceptSet) {
         info += int2string(i) + " ";
     }
     info += "\n delete_OPT " + int2string(_delOPT);
-    info += "\n\n";
+    info += "\n";
     return info;
 }
 
@@ -41,7 +41,7 @@ string rgx::_charSetEdge::toString() {
 
 string rgx::_loopStartEdge::toString() {
     string info;
-    info += "\n\n loopStartEdge \n\n";
+    info += "\n loopStartEdge \n";
     info += " loopTimes : " + int2string(_lowerLoopTimes) + "  " + int2string(_upperLoopTimes) + "\n";
     info += " greedy : " + bool2string(_greedy) + "\n";
     return info;
@@ -51,7 +51,7 @@ string rgx::_loopStartEdge::toString() {
 
 string rgx::_loopEndEdge::toString() {
     string info;
-    info += "\n\n loopEndEdge \n";
+    info += "\n loopEndEdge \n";
     info += " loopTimes : " + int2string(_lowerLoopTimes) + "  " + int2string(_upperLoopTimes) + "\n";
     info += " greedy : " + bool2string(_greedy) + "\n";
     return info;
@@ -62,7 +62,7 @@ string rgx::_loopEndEdge::toString() {
 
 string rgx::_captureStartEdge::toString() {
     string info;
-    info += "\n\n captureStartEdge\n";
+    info += "\n captureStartEdge\n";
     return info;
 }
 
@@ -71,7 +71,7 @@ string rgx::_captureStartEdge::toString() {
 
 string rgx::_captureEndEdge::toString() {
     string info;
-    info += "\n\n captureEndEdge \n";
+    info += "\n captureEndEdge \n";
     info += " captureIndex : " + int2string(_captureIndex) + "\n";
     return info;
 }
@@ -82,7 +82,7 @@ string rgx::_captureEndEdge::toString() {
 
 string rgx::_referenceEdge::toString() {
     string info;
-    info += "\n\n referenceEdge\n";
+    info += "\n referenceEdge\n";
     info += " referenceIndex: " + int2string(_referenceIndex) + "\n\n";
     return info;
 }
@@ -92,7 +92,7 @@ string rgx::_referenceEdge::toString() {
 
 string rgx::_positionEdge::toString() {
     string info;
-    info += "\n\n positionEdge \n";
+    info += "\n positionEdge \n";
     info += " position_type : " + int2string(_position) + "\n\n";
     return info;
 }
