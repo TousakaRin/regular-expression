@@ -28,7 +28,7 @@ rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_nfa), 
     }
 }
 
-shared_ptr<_astNode> rgx::_ast::re_term() {
+visitor_ptr<_astNode> rgx::_ast::re_term() {
     //_re_term 可以为空
     auto r = or_term();         //r 始终为子树的根节点
     while (_pos < _re.size() && _re[_pos] == '|') {
@@ -40,7 +40,7 @@ shared_ptr<_astNode> rgx::_ast::re_term() {
         auto n = or_term();
         // 出现'|' 之后，下一个必须是非空的or_term
         if (n) {
-            auto newRoot = make_shared<_or_node>();
+            auto newRoot = _objPool.make_visitor<_or_node>();
             newRoot->_left = r;
             newRoot->_right = n;
             r = newRoot;
@@ -56,14 +56,13 @@ shared_ptr<_astNode> rgx::_ast::re_term() {
      * 否则就是出错了！！！
     */
     if (_pos < _re.size() && _re[_pos] != ')') {
-        cout << "second" << endl;
         err();
         return nullptr;
     }
     return r;
 }
 
-shared_ptr<_astNode> rgx::_ast::or_term() {
+visitor_ptr<_astNode> rgx::_ast::or_term() {
     // or_term 可以为空 or_term -> cat_term -> null
     auto r = cat_term(); 
     while (_pos < _re.size()) {
@@ -75,7 +74,7 @@ shared_ptr<_astNode> rgx::_ast::or_term() {
         }
         auto n = cat_term();
         if (n) {
-            auto newRoot = make_shared<_cat_node>();
+            auto newRoot = _objPool.make_visitor<_cat_node>();
             newRoot->_left = r;
             newRoot->_right = n;
             r = newRoot;
@@ -88,7 +87,7 @@ shared_ptr<_astNode> rgx::_ast::or_term() {
     return r;
 }
 
-shared_ptr<_astNode> rgx::_ast::cat_term() {
+visitor_ptr<_astNode> rgx::_ast::cat_term() {
     // cat_term 可以为null
     if (_pos >= _re.size()) {
         return nullptr;
@@ -97,7 +96,7 @@ shared_ptr<_astNode> rgx::_ast::cat_term() {
     //判断是否属于位置节点^, $, \A...位置节点其实几乎可以
     //和普通节点一同处理，在这里与普通的字符节点分开处理,感觉
     //这样逻辑更加清晰一些
-    shared_ptr<_astNode> r = position_term();
+    visitor_ptr<_astNode> r = position_term();
     if (!r) {
         //在cat_term中r若不是_position_term，则r是charSet_term
         r = charSet_term();
@@ -120,19 +119,19 @@ shared_ptr<_astNode> rgx::_ast::cat_term() {
         return r;
     } else {
         numt->_left = r;
-        numt->_pre_read = pre;
-        numt->_post_read = _post; 
+        numt->_pre_read = std::move(pre);
+        numt->_post_read = std::move(_post); 
         return numt;
     }
 }
 
-shared_ptr<_preRead_node> rgx::_ast::pre_read_term() {
+unique_ptr<_preRead_node> rgx::_ast::pre_read_term() {
     //pre__read_term 可以为nullptr
     if (_pos + 5 >= _re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (_re[_pos] == '(' && _re[_pos + 1] == '?' && _re[_pos + 2] == '<' && (_re[_pos + 3] == '!' || _re[_pos + 3] == '=')) {
         _pos += 3; //match '(?<'
-        auto r = make_shared<_preRead_node>(_re[_pos] == '=');
+        auto r = unique_ptr<_preRead_node>(new _preRead_node(_re[_pos] == '='));
         ++_pos;     // match '=','!'
         /********************************/
         auto n = re_term(); //这里应该使用DFA处理，用来预读的子正则表达式讲道理的话支持纯正则特性就可以了
@@ -151,13 +150,13 @@ shared_ptr<_preRead_node> rgx::_ast::pre_read_term() {
     }
 }
 
-shared_ptr<_preRead_node> rgx::_ast::post_read_term() {
+unique_ptr<_preRead_node> rgx::_ast::post_read_term() {
     //_post__read_term 可以为nullptr
     if (_pos + 4 >= _re.size()) {  //至少6个字符，如: (?<!x)
         return nullptr;
     } else if (_re[_pos] == '(' && _re[_pos + 1] == '?'  && (_re[_pos + 2] == '!' || _re[_pos + 2] == '=')) {
         _pos += 2; //match '(?'
-        auto r = make_shared<_preRead_node>(_re[_pos] == '=');
+        auto r = unique_ptr<_preRead_node>(new _preRead_node(_re[_pos] == '='));
         ++_pos;     // match '=','!'
         /********************************/
         auto n = re_term(); //这里应该使用DFA处理，用来预读的子正则表达式讲道理的话支持纯正则特性就可以了
@@ -175,7 +174,7 @@ shared_ptr<_preRead_node> rgx::_ast::post_read_term() {
     }
 }
 
-shared_ptr<_astNode> rgx::_ast::charSet_term() {
+visitor_ptr<_astNode> rgx::_ast::charSet_term() {
     if (_pos >= _re.size()) {
         // charSet_term 可以为空
         return nullptr;
@@ -228,22 +227,22 @@ shared_ptr<_astNode> rgx::_ast::charSet_term() {
         // single char
         // 处理'.', '.'出现在字符类中时，不具备特殊意义，所以只要在这里处理'.'
         if (_re[_pos] == '.') {
-            auto  r = make_shared<_charSet_node>(_edgeMgr);;
+            auto  r = _objPool.make_visitor<_charSet_node>(_edgeMgr);;
             r->setInversison();
             r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1));
             ++_pos;
             return r;
         }
-        auto r = make_shared<_charSet_node>(_edgeMgr);;
+        auto r = _objPool.make_visitor<_charSet_node>(_edgeMgr);;
         r->addCharRange(pair<char16_t, char16_t>(_re[_pos], _re[_pos] + 1));
         ++_pos;
         return r;
     }
 }
 
-shared_ptr<_numCount_node>  rgx::_ast::num_term() {
+visitor_ptr<_numCount_node>  rgx::_ast::num_term() {
     if (_pos >= _re.size()) {
-        return make_shared<_numCount_node>();
+        return _objPool.make_visitor<_numCount_node>();
     }
     if (_re[_pos] == '{') {
         ++_pos;
@@ -254,7 +253,7 @@ shared_ptr<_numCount_node>  rgx::_ast::num_term() {
         }
         if (_re[_pos] == '}') {
             // {56}  match
-            return make_shared<_numCount_node>(lower, lower);
+            return _objPool.make_visitor<_numCount_node>(lower, lower);
         }
         if (_re[_pos] == '-') {
             auto errPos = _pos;
@@ -273,9 +272,9 @@ shared_ptr<_numCount_node>  rgx::_ast::num_term() {
                 }
                 if (_pos < _re.size() && _re[_pos] == '?') {
                     ++_pos; //match {45-83}?
-                    return make_shared<_numCount_node>(lower, upper, false);
+                    return _objPool.make_visitor<_numCount_node>(lower, upper, false);
                 } else {
-                    return make_shared<_numCount_node>(lower, upper);
+                    return _objPool.make_visitor<_numCount_node>(lower, upper);
                 }
             }
         } else {
@@ -286,29 +285,29 @@ shared_ptr<_numCount_node>  rgx::_ast::num_term() {
         ++_pos;
         if (_pos < _re.size() && _re[_pos] == '?') {
             ++_pos;
-            return make_shared<_numCount_node>(0, 1, false);
+            return _objPool.make_visitor<_numCount_node>(0, 1, false);
         } else {
-            return make_shared<_numCount_node>(0, 1);
+            return _objPool.make_visitor<_numCount_node>(0, 1);
         }
     } else if (_re[_pos] == '*') {
        ++_pos;  //match '*'
        if (_pos < _re.size() && _re[_pos] == '?') {
            ++_pos;  //match '*?'
-           return make_shared<_numCount_node>(0, -1, false);
+           return _objPool.make_visitor<_numCount_node>(0, -1, false);
        } else {
-           return make_shared<_numCount_node>(0, -1);
+           return _objPool.make_visitor<_numCount_node>(0, -1);
        }
     } else if (_re[_pos] == '+') {
         ++_pos;  //match '+'
         if (_pos < _re.size() && _re[_pos] == '?') {
             ++_pos;
-            return make_shared<_numCount_node>(1, -1, false);
+            return _objPool.make_visitor<_numCount_node>(1, -1, false);
         } else {
-            return make_shared<_numCount_node>(1, -1);
+            return _objPool.make_visitor<_numCount_node>(1, -1);
         }
     }
     // numCount 可以为空！！即只出现一次
-    return make_shared<_numCount_node>();
+    return _objPool.make_visitor<_numCount_node>();
 }
 
 
@@ -317,7 +316,7 @@ _ast::~_ast() {
 }
 
 
-bool rgx::_ast::charSetTrans(shared_ptr<_charSet_node> r) {
+bool rgx::_ast::charSetTrans(visitor_ptr<_charSet_node> &r) {
     /* 处理字符类中的转义
     *  单个的'/',以及无效的转义都会被当成语法错误
     *  在字符类中除'/', 在开头的'^', 不在开头的'-'之外的关键字全部失去意义，仅仅表示该字符
@@ -353,7 +352,7 @@ bool rgx::_ast::charSetTrans(shared_ptr<_charSet_node> r) {
     return true;
 }
 
-shared_ptr<_astNode> rgx::_ast::normalBracket() {
+visitor_ptr<_astNode> rgx::_ast::normalBracket() {
     // 在函数调用之前检查前缀是否为(?:,  函数内部不再检查前缀
     _pos += 3; // match '(?:'
     auto r = re_term();  
@@ -367,10 +366,10 @@ shared_ptr<_astNode> rgx::_ast::normalBracket() {
 }
 
 
-shared_ptr<_capture_node> rgx::_ast::namedCapture() {
+visitor_ptr<_capture_node> rgx::_ast::namedCapture() {
    // 在函数调用之前检查前缀是否为 (?P< ,  函数内部不再检查前缀
     _pos += 4;  //match '(?P<'
-    auto r = make_shared<_capture_node>(); 
+    auto r = _objPool.make_visitor<_capture_node>(); 
     while (_pos < _re.size() && _re[_pos] != '>') {
         if (_re[_pos] == '\\') {
             ++_pos;
@@ -397,10 +396,10 @@ shared_ptr<_capture_node> rgx::_ast::namedCapture() {
     }
 }
 
-shared_ptr<_capture_node> rgx::_ast::unnamedCapture() {
+visitor_ptr<_capture_node> rgx::_ast::unnamedCapture() {
     //进入函数之前判断前缀是(,并且不是(?
     ++_pos;    // match'('
-    auto r = make_shared<_capture_node>();
+    auto r = _objPool.make_visitor<_capture_node>();
     auto n = re_term();
     if (n && _pos < _re.size() && _re[_pos] == ')') {
         ++_pos;  //match')'
@@ -413,9 +412,9 @@ shared_ptr<_capture_node> rgx::_ast::unnamedCapture() {
     }
 }
 
-shared_ptr<_charSet_node> rgx::_ast::charClass() {
+visitor_ptr<_charSet_node> rgx::_ast::charClass() {
     //进入函数之前判断前缀
-    auto r = make_shared<_charSet_node>(_edgeMgr);;
+    auto r = _objPool.make_visitor<_charSet_node>(_edgeMgr);;
     ++_pos; //match '['
 
     //匹配在[]内作为第一个字符的'^'或'-'
@@ -460,10 +459,10 @@ shared_ptr<_charSet_node> rgx::_ast::charClass() {
     }
 }
 
-shared_ptr<_astNode> rgx::_ast::normalTrans() {
+visitor_ptr<_astNode> rgx::_ast::normalTrans() {
     // 入函数之前判断前缀
     ++_pos;           //match '\'
-    auto r = make_shared<_charSet_node>(_edgeMgr);;
+    auto r = _objPool.make_visitor<_charSet_node>(_edgeMgr);;
     if (_pos >= _re.size()) {
         err();
         return nullptr;
@@ -518,7 +517,7 @@ int rgx::_ast::getNum() {
     return sum;
 }
 
-shared_ptr<_reference_node> rgx::_ast::unnamedReference() {
+visitor_ptr<_reference_node> rgx::_ast::unnamedReference() {
     //  '\<number>'
     ++_pos;  //match '<'
     int index  = getNum(); //getNum
@@ -531,19 +530,19 @@ shared_ptr<_reference_node> rgx::_ast::unnamedReference() {
         return nullptr;
     }
     ++_pos;  //match '>'
-    return make_shared<_reference_node>(index);
+    return _objPool.make_visitor<_reference_node>(index);
 }
 
 
-shared_ptr<_reference_node> rgx::_ast::namedReference(const u16string &name) {
+visitor_ptr<_reference_node> rgx::_ast::namedReference(const u16string &name) {
     if (_nameMap.find(name) == _nameMap.end()) {
         err();
         return nullptr;
     }
-    return make_shared<_reference_node>(_nameMap[name], name);
+    return _objPool.make_visitor<_reference_node>(_nameMap[name], name);
 }
 
-shared_ptr<_position_node> rgx::_ast::position_term() {
+visitor_ptr<_position_node> rgx::_ast::position_term() {
     //本来生成位置节点时应该按照节点的类型对位置和数量信息进行精简
     //这部分工作交给生成自动机时在执行，为什么。。。因为生成ast的时候
     //所有的节点都用的_astNode类型啊，哭
@@ -552,22 +551,22 @@ shared_ptr<_position_node> rgx::_ast::position_term() {
     }
     if (_re[_pos] == '^') {
         ++_pos;
-        return make_shared<_position_node>(_position_node::LINE_BEGIN);
+        return _objPool.make_visitor<_position_node>(_position_node::LINE_BEGIN);
     } else if (_re[_pos] == '$') {
         ++_pos;
-        return make_shared<_position_node>(_position_node::LINE_END);
+        return _objPool.make_visitor<_position_node>(_position_node::LINE_END);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'A') {
         _pos += 2;
-        return make_shared<_position_node>(_position_node::STRING_BEGIN);
+        return _objPool.make_visitor<_position_node>(_position_node::STRING_BEGIN);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'Z') {
         _pos += 2;
-        return make_shared<_position_node>(_position_node::STRING_END);
+        return _objPool.make_visitor<_position_node>(_position_node::STRING_END);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'b') {
         _pos += 2;
-        return make_shared<_position_node>(_position_node::BREAK_OFF);
+        return _objPool.make_visitor<_position_node>(_position_node::BREAK_OFF);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'B') {
         _pos += 2;
-        return make_shared<_position_node>(_position_node::NO_BREAK_OFF);
+        return _objPool.make_visitor<_position_node>(_position_node::NO_BREAK_OFF);
     } else {
         return nullptr;
     }

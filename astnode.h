@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "visitor_ptr.h"
 #include "edgeManager.h"
 #include "stringTools.h"
 
@@ -22,7 +23,7 @@ class _preRead_node;
 class _astNode {
 public:
     _astNode();
-    std::shared_ptr<_astNode> _left, _right;
+    visitor_ptr<_astNode> _left, _right;
     _NFA_ptr _NFAptr;                         //加上它是为了在生成NFA时更方便的使用非递归算法
     void err(const std::string&);
     void err();
@@ -94,9 +95,9 @@ class _preRead_node {
 //正向预读和反向预读使用同一种节点表示即可
 public:
     _preRead_node(bool);
-    _preRead_node(std::shared_ptr<_astNode>, bool);
+    _preRead_node(const visitor_ptr<_astNode>&, bool);
     bool pattern_tag; //预读内容是否匹配,即(?:<!) 还是(?:<=)
-    std::shared_ptr<_astNode> _dfaTree;
+    visitor_ptr<_astNode> _dfaTree;
     std::string toString();
     void generateDFA(_pattern&);
 };
@@ -142,7 +143,7 @@ public:
     bool _greedy;
     int _lowerLoopTimes, _upperLoopTimes;
     virtual std::string toString();
-    std::shared_ptr<_preRead_node> _pre_read, _post_read;
+    std::unique_ptr<_preRead_node> _pre_read, _post_read;
     virtual void generateNFA(_pattern&);
 };
 

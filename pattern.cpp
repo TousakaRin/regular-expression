@@ -17,7 +17,7 @@ using namespace rgx;
 
 rgx::_pattern::_pattern(const _ast& ast) : _edgeMgr(ast._edgeMgr) , _NFA_nodeCount(0) {
     //使用非递归方法后序遍历ast来生成NFA
-    stack<shared_ptr<_astNode>> s;  
+    stack<visitor_ptr<_astNode>> s;  
     auto p = ast._root;  
     do {  
         while(p) {  
@@ -63,6 +63,7 @@ void rgx::_pattern::traversal() {
         }
         dq.pop_front();
     }
+    cout << "\n--------------------traversal completed---------------------------" << endl;
 }
 
 void rgx::_pattern::epsilonCut() {

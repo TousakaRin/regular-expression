@@ -8,7 +8,7 @@ main.o : ast.h astnode.h stringTools.h testCase.h\
 	main.cpp
 	g++-5 -c $(flag) main.cpp
 
-ast.o : ast.h \
+ast.o : ast.h visitor_ptr.h objectPool.h\
 	ast.cpp
 	g++-5 -c $(flag) ast.cpp
 astnode.o : astnode.h stringTools.h\
@@ -43,6 +43,8 @@ nfaNode.o : ast.h pattern.h nfaEdge.h nfaNode.h \
 	nfaNode.cpp
 	g++-5 -c $(flag) nfaNode.cpp
 
+.PHONY : clean
 clean :
-	rm test *.o
-	rm -rf test.*
+	-rm test *.o
+	-rm -rf test.*
+	-rm *.h.gch

@@ -207,7 +207,7 @@ rgx::_preRead_node::_preRead_node(bool tag) : pattern_tag(tag), _dfaTree(nullptr
 
 }
 
-rgx::_preRead_node::_preRead_node(shared_ptr<_astNode> reTerm, bool tag) : pattern_tag(tag), _dfaTree(reTerm) {
+rgx::_preRead_node::_preRead_node(const visitor_ptr<_astNode> &reTerm, bool tag) : pattern_tag(tag), _dfaTree(reTerm) {
 
 } 
 
