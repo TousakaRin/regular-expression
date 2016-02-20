@@ -36,35 +36,47 @@ public:
     visitor_ptr(std::nullptr_t) : _index(0), _objPool(nullptr) {}
 
     unsigned int index() const { return _index; }
+
+    elemType *get()  { return this->operator->(); }
+
     elemType* operator->() {
         return static_cast<elemType*>(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index].get());
     }
+
     const elemType* operator->() const {
         return static_cast<elemType*>(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index].get());
     }
+
     elemType& operator*() {
         return *(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index]);
     }
+
     const elemType& operator*() const {
         return *(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index]);
     }
+
     visitor_ptr& operator=(const visitor_ptr& v_ptr) {
         _index = v_ptr._index;
         _objPool = v_ptr._objPool;
         return *this;
     }
+
     bool operator==(const visitor_ptr& v_ptr) const {
         return _objPool == v_ptr._objPool && _index == v_ptr._index;
     }
+    
     bool operator!=(const visitor_ptr& v_ptr) const {
         return !this->operator==(v_ptr);
     }
+
     bool operator==(std::nullptr_t) const {
         return _objPool == nullptr;
     }
+
     bool operator!=(std::nullptr_t) const {
         return _objPool != nullptr;
     }
+
     operator bool() const {
         return _objPool != nullptr; 
     }

@@ -15,7 +15,7 @@ using namespace rgx;
 
 /*=================================PATTERN=========================================*/
 
-rgx::_pattern::_pattern(const _ast& ast) : _edgeMgr(ast._edgeMgr) , _NFA_nodeCount(0) {
+rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr)  {
     //使用非递归方法后序遍历ast来生成NFA
     stack<visitor_ptr<_astNode>> s;  
     auto p = ast._root;  
@@ -32,7 +32,7 @@ rgx::_pattern::_pattern(const _ast& ast) : _edgeMgr(ast._edgeMgr) , _NFA_nodeCou
             p = s.top()->_right;  
         }  
     } while(!s.empty());  
-    _NFAptr = ast._root->_NFAptr;
+    _NFAptr.reset(ast._root->_NFAptr.release());
     epsilonCut();
 }
 
@@ -48,13 +48,14 @@ void rgx::_pattern::err(const string& msg) {
 }
 
 void rgx::_pattern::traversal() {
-    deque<shared_ptr<_NFA_Node>> dq;
+    deque<visitor_ptr<_NFA_Node>> dq;
     set<_NFA_Node*> s;
     dq.push_back(_NFAptr->first);
     while(!dq.empty()) {
         s.insert(dq.front().get());
-        cout << " node : " << dq.front()->id;
-        for (auto edge : dq.front()->edges) {
+    //    cout << " node : " << dq.front()->index();
+        for (unsigned int i = 0; i < dq.front()->edges.size(); ++i) {
+            auto edge = dq.front()->edges[i].get();
             cout << edge->toString() << endl;
             if (s.find(edge->_toNode.get()) == s.end()) {
                 dq.push_back(edge->_toNode);
@@ -71,11 +72,10 @@ void rgx::_pattern::epsilonCut() {
 
 /*===================================DFA_PATTERN===================================*/
 
-_dfa_pattern::_dfa_pattern(const _ast& ast) : _pattern(ast), _DFAptr(make_shared<_DFA>()) {
+_dfa_pattern::_dfa_pattern(_ast& ast) : _pattern(ast)/*, _DFAptr(make_shared<_DFA>())*/ {
     //使用子集构造法建立DFA
-    unsigned int statsCount = _edgeMgr->statsCount();
-    statsCount = 0;
-    vector<bool> alreadyOn(_NFA_nodeCount);
+  /*  unsigned int statsCount = _edgeMgr->statsCount();
+    statsCount = 0;*/
 }
 
 
@@ -94,7 +94,7 @@ std::shared_ptr<std::vector<matchObj>> _dfa_pattern::findall(const std::u16strin
 
 /*===================================NFA_PATTERN===================================*/
 
-_nfa_pattern::_nfa_pattern(const _ast& ast) : _pattern(ast) {
+_nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
     if (ast._build_type != _ast::build_to_nfa) {
         err("ast与pattern类型不一致，应为_build_to_nfa");
     }

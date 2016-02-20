@@ -2,12 +2,15 @@
 #define _EDGE_MANAGER_
 
 #include <array>
+#include <iostream>
 
 namespace rgx {
 
 class _charSet_node;
+class _NFA_Node;
 class _edgeManager {
     friend _charSet_node;
+    friend _NFA_Node;
 
 public: 
     enum {_ENCODE_LENGTH = 65536};

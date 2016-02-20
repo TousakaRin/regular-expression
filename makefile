@@ -11,7 +11,7 @@ main.o : ast.h astnode.h stringTools.h testCase.h\
 ast.o : ast.h visitor_ptr.h objectPool.h\
 	ast.cpp
 	g++-5 -c $(flag) ast.cpp
-astnode.o : astnode.h stringTools.h\
+astnode.o : astnode.h stringTools.h typedef.h\
 	astnode.cpp
 	g++-5 -c $(flag) astnode.cpp
 
@@ -35,7 +35,7 @@ edgeManager.o : edgeManager.h \
 	edgeManager.cpp
 	g++-5 -c $(flag) edgeManager.cpp
 
-nfaEdge.o : nfaEdge.h \
+nfaEdge.o : nfaEdge.h typedef.h\
 	nfaEdge.cpp
 	g++-5 -c $(flag) nfaEdge.cpp
 

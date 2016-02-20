@@ -551,22 +551,22 @@ visitor_ptr<_position_node> rgx::_ast::position_term() {
     }
     if (_re[_pos] == '^') {
         ++_pos;
-        return _objPool.make_visitor<_position_node>(_position_node::LINE_BEGIN);
+        return _objPool.make_visitor<_position_node>(LINE_BEGIN);
     } else if (_re[_pos] == '$') {
         ++_pos;
-        return _objPool.make_visitor<_position_node>(_position_node::LINE_END);
+        return _objPool.make_visitor<_position_node>(LINE_END);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'A') {
         _pos += 2;
-        return _objPool.make_visitor<_position_node>(_position_node::STRING_BEGIN);
+        return _objPool.make_visitor<_position_node>(STRING_BEGIN);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'Z') {
         _pos += 2;
-        return _objPool.make_visitor<_position_node>(_position_node::STRING_END);
+        return _objPool.make_visitor<_position_node>(STRING_END);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'b') {
         _pos += 2;
-        return _objPool.make_visitor<_position_node>(_position_node::BREAK_OFF);
+        return _objPool.make_visitor<_position_node>(BREAK_OFF);
     } else if (_pos + 1 < _re.size() && _re[_pos] == '\\' && _re[_pos + 1] == 'B') {
         _pos += 2;
-        return _objPool.make_visitor<_position_node>(_position_node::NO_BREAK_OFF);
+        return _objPool.make_visitor<_position_node>(NO_BREAK_OFF);
     } else {
         return nullptr;
     }

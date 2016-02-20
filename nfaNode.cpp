@@ -1,72 +1,81 @@
 #include "nfaNode.h"
 #include "pattern.h"
 #include "nfaEdge.h"
+#include "astnode.h"
 #include "ast.h"
 
 using namespace std;
 using namespace rgx;
 
-rgx::_NFA_Node::_NFA_Node(_pattern& p) {
-    id = p._NFA_nodeCount++;
+rgx::_NFA_Node::_NFA_Node() {
 }
 
-shared_ptr<_epsilonEdge>rgx::_NFA_Node::addEpsilonEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_epsilonEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+void rgx::_NFA_Node::err() {
+    exit(-1);
 }
 
-shared_ptr<_charSetEdge> rgx::_NFA_Node::addCharSetEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_charSetEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+void rgx::_NFA_Node::err(const string& msg) {
+    cout << "\n--------------------------------------" << endl
+        << msg 
+        << "\n-----------------------------------------" << endl;
+    err();
 }
 
-
-shared_ptr<_loopStartEdge> rgx::_NFA_Node::addLoopStartEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_loopStartEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+void rgx::_NFA_Node::addEpsilonEdge(const visitor_ptr<_NFA_Node> &goalNode) {
+    edges.push_back(unique_ptr<_NFA_Edge>(new _epsilonEdge(goalNode)));
 }
 
-
-
-shared_ptr<_loopEndEdge> rgx::_NFA_Node::addLoopEndEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_loopEndEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
-}
-
-
-shared_ptr<_captureStartEdge> rgx::_NFA_Node::addCaptureStartEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_captureStartEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+void rgx::_NFA_Node::addCharSetEdge(const visitor_ptr<_NFA_Node> &goalNode, const _charSet_node& csn) {
+    set<unsigned int> acceptSet;
+    if (auto p = csn._edgeMgr.lock()) {
+        for (auto range : csn._acceptSet) {
+            unsigned int pre = p->_hashTable[range.first];
+            acceptSet.insert(pre);
+            for (auto i = range.first; i <  range.second; ++i) {
+                if (p->_hashTable[i] != pre) {
+                    acceptSet.insert(pre);
+                    pre = p->_hashTable[i];
+                }
+            }
+        }
+        unique_ptr<_charSetEdge> newEdge(new _charSetEdge(goalNode, std::move(acceptSet), csn._delOPT));
+        edges.push_back(std::move(newEdge));
+    } else {
+        err("function addCharSetEdge : 找不到对象 ");
+    }
 }
 
 
-shared_ptr<_captureEndEdge> rgx::_NFA_Node::addCaptureEndEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_captureEndEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+void rgx::_NFA_Node::addLoopStartEdge(const visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+    edges.push_back(unique_ptr<_NFA_Edge>(
+                new _loopStartEdge(goalNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
 }
 
-shared_ptr<_referenceEdge> rgx::_NFA_Node::addReferenceEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_referenceEdge>();
-    newEdge->_toNode  = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+
+
+void rgx::_NFA_Node::addLoopEndEdge(const visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+    edges.push_back(unique_ptr<_NFA_Edge>(
+                new _loopEndEdge(goalNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
 }
 
-shared_ptr<_positionEdge> rgx::_NFA_Node::addPositionEdge(shared_ptr<_NFA_Node> goalNode) {
-    auto newEdge = make_shared<_positionEdge>();
-    newEdge->_toNode = goalNode;
-    edges.push_back(newEdge);
-    return newEdge;
+
+void rgx::_NFA_Node::addCaptureStartEdge(const visitor_ptr<_NFA_Node> &goalNode, const _capture_node &cn) {
+    edges.push_back(unique_ptr<_NFA_Edge>(
+                new _captureStartEdge(goalNode, cn._captureIndex)));
+}
+
+
+void rgx::_NFA_Node::addCaptureEndEdge(const visitor_ptr<_NFA_Node> &goalNode, const _capture_node &cn) {
+    edges.push_back(unique_ptr<_NFA_Edge>(
+                new _captureEndEdge(goalNode, cn._captureIndex)));
+}
+
+void rgx::_NFA_Node::addReferenceEdge(const visitor_ptr<_NFA_Node> &goalNode, const _reference_node &refn) {
+    edges.push_back(unique_ptr<_NFA_Edge>(
+                new _referenceEdge(goalNode, refn._referenceIndex)));
+}
+
+void rgx::_NFA_Node::addPositionEdge(const visitor_ptr<_NFA_Node> &goalNode, const _position_node &psn) {
+    edges.push_back(unique_ptr<_NFA_Edge>(
+                new _positionEdge(goalNode, psn._position)));
 }

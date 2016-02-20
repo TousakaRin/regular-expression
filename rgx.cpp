@@ -16,6 +16,8 @@ shared_ptr<_pattern> rgx::compile(const string & re) {
     }
 }
 
+
+
 void rgx::astTraversal(const _ast& ast) {
     auto r = ast._root;
     stack<decltype(r)> s;    

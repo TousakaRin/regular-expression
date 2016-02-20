@@ -2,6 +2,7 @@
 #include "stringTools.h"
 #include "nfaEdge.h"
 #include "nfaNode.h"
+#include "pattern.h"
 #include <iostream>
 
 using namespace std;
@@ -53,8 +54,8 @@ string rgx::_or_node::toString() {
 void rgx::_or_node::generateNFA(_pattern& pattern) {
     // 首先新建开始与完成节点
     cout << "or_node_generate_NFA\n" << endl;
-    auto startNode = make_shared<_NFA_Node>(pattern); 
-    auto finishNode = make_shared<_NFA_Node>(pattern);
+    auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>(); 
+    auto finishNode = pattern.getObjPool().make_visitor<_NFA_Node>();
 
     if (!_left || !_left->_NFAptr) {
         cout << toString() << endl;
@@ -73,7 +74,7 @@ void rgx::_or_node::generateNFA(_pattern& pattern) {
     _left->_NFAptr->second->addEpsilonEdge(finishNode);
     _right->_NFAptr->second->addEpsilonEdge(finishNode);
 
-    _NFAptr = make_shared<_NFA>(startNode, finishNode); 
+    _NFAptr.reset(new _NFA(startNode, finishNode)); 
 }
 
 /*-----------------------------------------------*/
@@ -179,25 +180,10 @@ void rgx::_charSet_node::generateNFA(_pattern& pattern) {
     if (_left || _right) {
         err(" charSet出现孩子节点 ");
     }
-    auto startNode = make_shared<_NFA_Node>(pattern);
-    auto finishNode = make_shared<_NFA_Node>(pattern);
-    auto newEdge = startNode->addCharSetEdge(finishNode);
-    newEdge->_delOPT = _delOPT;
-    if (auto p = _edgeMgr.lock()) {
-        for (auto range : _acceptSet) {
-            unsigned int pre = p->_hashTable[range.first];
-            newEdge->_acceptSet.insert(pre);
-            for (auto i = range.first; i <  range.second; ++i) {
-                if (p->_hashTable[i] != pre) {
-                    newEdge->_acceptSet.insert(pre);
-                    pre = p->_hashTable[i];
-                }
-            }
-        }
-    } else {
-        err("in function rgx::_charSet_node::generateNFA()  \n\n 找不到对象: _edgeMgr \n\n");
-    }
-    _NFAptr = make_shared<_NFA>(startNode, finishNode);
+    auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    auto finishNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    startNode->addCharSetEdge(finishNode, *this);
+    _NFAptr.reset(new _NFA(startNode, finishNode));
 }
 
 
@@ -247,11 +233,10 @@ void rgx::_reference_node::generateNFA(_pattern& pattern) {
     if (_left || _right) {
         err(" referenceNode出现子节点 ");
     }
-    auto startNode = make_shared<_NFA_Node>(pattern);
-    auto finishNode = make_shared<_NFA_Node>(pattern);
-    auto newEdge = startNode->addReferenceEdge(finishNode);
-    newEdge->_referenceIndex = _referenceIndex;
-    _NFAptr = make_shared<_NFA>(startNode, finishNode);
+    auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    auto finishNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    startNode->addReferenceEdge(finishNode, *this);
+    _NFAptr.reset(new _NFA(startNode, finishNode));
 }
 
 
@@ -291,17 +276,10 @@ void rgx::_numCount_node::generateNFA(_pattern& pattern) {
         cout << toString() << endl;
         err(" 生成NFA时出错 ");
     } 
-    auto child = _left->_NFAptr;
-    auto startNode = make_shared<_NFA_Node>(pattern);
-    auto loopStart = startNode->addLoopStartEdge(child->first);
-    auto loopEnd = child->second->addLoopEndEdge(child->first);
-    loopStart->_lowerLoopTimes  = _lowerLoopTimes;
-    loopStart->_upperLoopTimes = _upperLoopTimes;
-    loopStart->_greedy = _greedy; 
-    loopEnd->_lowerLoopTimes = _lowerLoopTimes;
-    loopEnd->_upperLoopTimes = _upperLoopTimes;
-    loopEnd->_greedy = _greedy;
-    _NFAptr = make_shared<_NFA>(startNode, child->second);
+    auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    startNode->addLoopStartEdge(_left->_NFAptr->first, *this);
+    _left->_NFAptr->second->addLoopEndEdge(_left->_NFAptr->first, *this);
+    _NFAptr.reset(new _NFA(startNode, _left->_NFAptr->second));
 }
 
 /*-----------------------------------------------*/
@@ -321,14 +299,11 @@ void rgx::_capture_node::generateNFA(_pattern& pattern) {
         cout << toString() << endl;
         err(" 生成NFA时出错 ");
     }
-    auto startNode = make_shared<_NFA_Node>(pattern);
-    auto finishNode = make_shared<_NFA_Node>(pattern);
-    auto child = _left->_NFAptr;
-    auto captureStart = startNode->addCaptureStartEdge(child->first);
-    auto captureEnd = child->second->addCaptureEndEdge(finishNode);
-    captureStart->_captureIndex = _captureIndex;
-    captureEnd->_captureIndex = _captureIndex;
-    _NFAptr = make_shared<_NFA>(startNode, finishNode);
+    auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    auto finishNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    startNode->addCaptureStartEdge(_left->_NFAptr->first, *this);
+    _left->_NFAptr->second->addCaptureEndEdge(finishNode, *this);
+    _NFAptr.reset(new _NFA(startNode, finishNode));
 }
 
 /*-----------------------------------------------*/
@@ -345,10 +320,8 @@ void rgx::_cat_node::generateNFA(_pattern&) {
         cout << toString() << endl;
         err(" 生成NFA 时出错 ");
     }
-    auto leftChild = _left->_NFAptr;
-    auto rightChild = _right->_NFAptr;
-    leftChild->second->addEpsilonEdge(rightChild->first);
-    _NFAptr = make_shared<_NFA>(leftChild->first, rightChild->second);
+    _left->_NFAptr->second->addEpsilonEdge(_right->_NFAptr->first);
+    _NFAptr.reset(new _NFA(_left->_NFAptr->first, _right->_NFAptr->second));
 }
 
 /*-----------------------------------------------*/
@@ -389,9 +362,8 @@ void rgx::_position_node::generateNFA(_pattern& pattern) {
         cout << toString() << endl;
         err(" _position_node 出现字节点 ");
     }
-    auto startNode = make_shared<_NFA_Node>(pattern);
-    auto finishNode = make_shared<_NFA_Node>(pattern);
-    auto newEdge = startNode->addPositionEdge(finishNode);
-    newEdge->_position = _position;
-    _NFAptr = make_shared<_NFA>(startNode, finishNode);
+    auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    auto finishNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    startNode->addPositionEdge(finishNode, *this);
+    _NFAptr.reset(new _NFA(startNode, finishNode));
 }

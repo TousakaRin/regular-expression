@@ -7,6 +7,9 @@ using namespace std;
 
 /*=========================_NFA_Edge=================================================*/
 
+rgx::_NFA_Edge::_NFA_Edge(const visitor_ptr<_NFA_Node> &toNode) 
+    : _toNode(toNode) {}
+
 string rgx::_NFA_Edge::toString() {
     string info;
     info += "\n _NFA_Node \n";
@@ -17,6 +20,9 @@ string rgx::_NFA_Edge::toString() {
 
 /*================================epsilonEdge==========================================*/
 
+rgx::_epsilonEdge::_epsilonEdge(const visitor_ptr<_NFA_Node> &toNode) 
+    : _NFA_Edge(toNode) {}
+
 string rgx::_epsilonEdge::toString() {
     string info;
     info += "\n epsilonEdge \n";
@@ -25,6 +31,9 @@ string rgx::_epsilonEdge::toString() {
 
 
 /*===================================charSetEdge=======================================*/
+
+rgx::_charSetEdge::_charSetEdge(const visitor_ptr<_NFA_Node> &toNode, set<unsigned int> &&s, unsigned int delopt) 
+    : _NFA_Edge(toNode), _acceptSet(s), _delOPT(delopt) {}
 
 string rgx::_charSetEdge::toString() {
     string info;
@@ -39,6 +48,9 @@ string rgx::_charSetEdge::toString() {
 
 /*================================loopStartEdge===========================================*/
 
+rgx::_loopStartEdge::_loopStartEdge(const visitor_ptr<_NFA_Node> &toNode, int llt, int ult, bool grd) 
+    : _NFA_Edge(toNode), _lowerLoopTimes(llt), _upperLoopTimes(ult), _greedy(grd) {}
+
 string rgx::_loopStartEdge::toString() {
     string info;
     info += "\n loopStartEdge \n";
@@ -48,6 +60,9 @@ string rgx::_loopStartEdge::toString() {
 }
 
 /*===================================loopEndEdge==========================================*/
+
+rgx::_loopEndEdge::_loopEndEdge(const visitor_ptr<_NFA_Node> &toNode, int llt, int ult, bool grd)
+    : _NFA_Edge(toNode), _lowerLoopTimes(llt), _upperLoopTimes(ult), _greedy(grd) {}
 
 string rgx::_loopEndEdge::toString() {
     string info;
@@ -60,6 +75,9 @@ string rgx::_loopEndEdge::toString() {
 
 /*================================captureStart===========================================*/
 
+rgx::_captureStartEdge::_captureStartEdge(const visitor_ptr<_NFA_Node> &toNode, unsigned int captureindex) 
+    : _NFA_Edge(toNode), _captureIndex(captureindex) {}
+
 string rgx::_captureStartEdge::toString() {
     string info;
     info += "\n captureStartEdge\n";
@@ -68,6 +86,9 @@ string rgx::_captureStartEdge::toString() {
 
 
 /*==============================captureEndEdge===========================================*/
+
+rgx::_captureEndEdge::_captureEndEdge(const visitor_ptr<_NFA_Node> &toNode, unsigned int captureindex) 
+    : _NFA_Edge(toNode), _captureIndex(captureindex) {}
 
 string rgx::_captureEndEdge::toString() {
     string info;
@@ -80,6 +101,9 @@ string rgx::_captureEndEdge::toString() {
 
 /*===============================referenceEdge============================================*/
 
+rgx::_referenceEdge::_referenceEdge(const visitor_ptr<_NFA_Node> &toNode, unsigned int referenceindex) 
+    :_NFA_Edge(toNode), _referenceIndex(referenceindex) {}
+
 string rgx::_referenceEdge::toString() {
     string info;
     info += "\n referenceEdge\n";
@@ -88,7 +112,10 @@ string rgx::_referenceEdge::toString() {
 }
 
 
-/*================================epsilonEdge===========================================*/
+/*================================positionEdge===========================================*/
+
+rgx::_positionEdge::_positionEdge(const visitor_ptr<_NFA_Node> &toNode, position_type position) 
+    : _NFA_Edge(toNode), _position(position) {}
 
 string rgx::_positionEdge::toString() {
     string info;
