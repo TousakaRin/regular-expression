@@ -28,15 +28,17 @@ public:
     _NFA_Node();
     std::vector<std::unique_ptr<_NFA_Edge>> edges;
     void addEpsilonEdge(const visitor_ptr<_NFA_Node>&);
-    void addCharSetEdge(const visitor_ptr<_NFA_Node>&, const _charSet_node&);
-    void addLoopStartEdge(const visitor_ptr<_NFA_Node>&, const _numCount_node&);
-    void addLoopEndEdge(const visitor_ptr<_NFA_Node>&, const _numCount_node&);
-    void addCaptureStartEdge(const visitor_ptr<_NFA_Node>&, const _capture_node&);
-    void addCaptureEndEdge(const visitor_ptr<_NFA_Node>&, const _capture_node&);
-    void addReferenceEdge(const visitor_ptr<_NFA_Node>&, const _reference_node&);
-    void addPositionEdge(const visitor_ptr<_NFA_Node>&, const _position_node&);
+    void addCharSetEdge(visitor_ptr<_NFA_Node>&, const _charSet_node&);
+    void addLoopStartEdge(visitor_ptr<_NFA_Node>&, const _numCount_node&);
+    void addLoopEndEdge(visitor_ptr<_NFA_Node>&, const _numCount_node&);
+    void addCaptureStartEdge(visitor_ptr<_NFA_Node>&, const _capture_node&);
+    void addCaptureEndEdge(visitor_ptr<_NFA_Node>&, const _capture_node&);
+    void addReferenceEdge(visitor_ptr<_NFA_Node>&, const _reference_node&);
+    void addPositionEdge(visitor_ptr<_NFA_Node>&, const _position_node&);
     void err();
     void err(const std::string&);
+    bool _effective;
+    void setEffective();
 };
 
 typedef std::pair<visitor_ptr<_NFA_Node>, visitor_ptr<_NFA_Node>> _NFA;

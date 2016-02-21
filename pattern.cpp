@@ -33,7 +33,9 @@ rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr)  {
         }  
     } while(!s.empty());  
     _NFAptr.reset(ast._root->_NFAptr.release());
-    epsilonCut();
+    //将开始节点设为有效节点，用于空边消除算法
+    _NFAptr->first->setEffective();
+//    epsilonCut();
 }
 
 void rgx::_pattern::err() {
@@ -68,6 +70,31 @@ void rgx::_pattern::traversal() {
 }
 
 void rgx::_pattern::epsilonCut() {
+    vector<visitor_ptr<_NFA_Node>> effectiveNodes;
+    for (unsigned int i = 0; i < _objPool.capacity(); ++i) {
+        auto vptr = _objPool.get_visitor(i);
+        if (vptr->_effective) {
+            mergeClosure(vptr);
+        }
+    } 
+}
+
+void rgx::_pattern::mergeClosure(visitor_ptr<_NFA_Node>& vptr) {
+    vector<bool> unVisited(_objPool.capacity(), true);
+    vector<visitor_ptr<_NFA_Node>> candidate[2];
+    unsigned int current = 0, next = 1;
+    candidate[current].push_back(vptr);
+    while (!candidate[current].empty()) {
+        for (auto &ptr : candidate[current]) {
+            for (unsigned int i = 0; i < ptr->edges.size(); ++i) {
+                if (unVisited[ptr->edges[i]->_toNode.index()]) {
+                    unVisited[ptr->edges[i]->_toNode.index()] = false;
+                    candidate[next].push_back(ptr->edges[i]->_toNode);
+                }
+            }
+        }
+        swap(current, next);
+    }
 }
 
 /*===================================DFA_PATTERN===================================*/

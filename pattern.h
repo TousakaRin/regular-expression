@@ -47,8 +47,9 @@ protected:
     _NFA_Ptr _NFAptr;
 
 private:
-    void epsilonCut();               //除去不必要的epsilon边
+    void epsilonCut();                               //除去不必要的epsilon边
     _objectPool<_NFA_Node>  _objPool;
+    void mergeClosure(visitor_ptr<_NFA_Node>&);                            //将闭包中的边拷贝到关键节点中,用于epsilonCut() 
 
 };
 

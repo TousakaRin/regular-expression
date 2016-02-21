@@ -7,7 +7,7 @@
 using namespace std;
 using namespace rgx;
 
-rgx::_NFA_Node::_NFA_Node() {
+rgx::_NFA_Node::_NFA_Node() : _effective(false) {
 }
 
 void rgx::_NFA_Node::err() {
@@ -25,7 +25,8 @@ void rgx::_NFA_Node::addEpsilonEdge(const visitor_ptr<_NFA_Node> &goalNode) {
     edges.push_back(unique_ptr<_NFA_Edge>(new _epsilonEdge(goalNode)));
 }
 
-void rgx::_NFA_Node::addCharSetEdge(const visitor_ptr<_NFA_Node> &goalNode, const _charSet_node& csn) {
+void rgx::_NFA_Node::addCharSetEdge(visitor_ptr<_NFA_Node> &goalNode, const _charSet_node& csn) {
+    goalNode->setEffective();
     set<unsigned int> acceptSet;
     if (auto p = csn._edgeMgr.lock()) {
         for (auto range : csn._acceptSet) {
@@ -46,36 +47,46 @@ void rgx::_NFA_Node::addCharSetEdge(const visitor_ptr<_NFA_Node> &goalNode, cons
 }
 
 
-void rgx::_NFA_Node::addLoopStartEdge(const visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+void rgx::_NFA_Node::setEffective() {
+    _effective = true;    
+}
+
+
+void rgx::_NFA_Node::addLoopStartEdge(visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+    goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _loopStartEdge(goalNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
 }
 
 
-
-void rgx::_NFA_Node::addLoopEndEdge(const visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+void rgx::_NFA_Node::addLoopEndEdge(visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+    goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _loopEndEdge(goalNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
 }
 
 
-void rgx::_NFA_Node::addCaptureStartEdge(const visitor_ptr<_NFA_Node> &goalNode, const _capture_node &cn) {
+void rgx::_NFA_Node::addCaptureStartEdge(visitor_ptr<_NFA_Node> &goalNode, const _capture_node &cn) {
+    goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _captureStartEdge(goalNode, cn._captureIndex)));
 }
 
 
-void rgx::_NFA_Node::addCaptureEndEdge(const visitor_ptr<_NFA_Node> &goalNode, const _capture_node &cn) {
+void rgx::_NFA_Node::addCaptureEndEdge(visitor_ptr<_NFA_Node> &goalNode, const _capture_node &cn) {
+    goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _captureEndEdge(goalNode, cn._captureIndex)));
 }
 
-void rgx::_NFA_Node::addReferenceEdge(const visitor_ptr<_NFA_Node> &goalNode, const _reference_node &refn) {
+void rgx::_NFA_Node::addReferenceEdge(visitor_ptr<_NFA_Node> &goalNode, const _reference_node &refn) {
+    goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _referenceEdge(goalNode, refn._referenceIndex)));
 }
 
-void rgx::_NFA_Node::addPositionEdge(const visitor_ptr<_NFA_Node> &goalNode, const _position_node &psn) {
+void rgx::_NFA_Node::addPositionEdge(visitor_ptr<_NFA_Node> &goalNode, const _position_node &psn) {
+    goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _positionEdge(goalNode, psn._position)));
 }

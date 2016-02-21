@@ -7,14 +7,14 @@
 #include "visitor_ptr.h"
 #include "edgeManager.h"
 #include "stringTools.h"
+#include "nfaNode.h"
+#include "typedef.h"
 
 
 namespace rgx {
 
 class _NFA_Node;
 class _pattern;
-typedef std::pair<std::shared_ptr<_NFA_Node>, std::shared_ptr<_NFA_Node>> _NFA;
-typedef std::shared_ptr<_NFA>  _NFA_ptr;
 
 /*-----------------------------------------------*/
 
@@ -24,7 +24,7 @@ class _astNode {
 public:
     _astNode();
     visitor_ptr<_astNode> _left, _right;
-    _NFA_ptr _NFAptr;                         //加上它是为了在生成NFA时更方便的使用非递归算法
+    _NFA_Ptr _NFAptr;                         //加上它是为了在生成NFA时更方便的使用非递归算法
     void err(const std::string&);
     void err();
     virtual std::string toString();
@@ -153,7 +153,7 @@ public:
 
 class _position_node : public _astNode {
 public:
-    enum position_type {LINE_BEGIN, LINE_END, STRING_BEGIN, STRING_END, BREAK_OFF, NO_BREAK_OFF} _position;
+    position_type _position;
     _position_node(position_type);
     virtual std::string toString();
     std::string positionString();
