@@ -41,6 +41,7 @@ public:
     void err();
     void err(const std::string&);
     _objectPool<_NFA_Node>& getObjPool() { return _objPool; }
+    void sequenceTraversal();
 
 protected:
     std::shared_ptr<_edgeManager> _edgeMgr;

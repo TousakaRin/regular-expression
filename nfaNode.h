@@ -35,6 +35,10 @@ public:
     void addCaptureEndEdge(visitor_ptr<_NFA_Node>&, const _capture_node&);
     void addReferenceEdge(visitor_ptr<_NFA_Node>&, const _reference_node&);
     void addPositionEdge(visitor_ptr<_NFA_Node>&, const _position_node&);
+
+
+//    std::vector<visitor_ptr<_NFA_Node>> nonEpsilonEdgeVec();         //返回所有非空边的集合
+    void deleteEpsilonEdge();
     void err();
     void err(const std::string&);
     bool _effective;

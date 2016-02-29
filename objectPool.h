@@ -23,10 +23,15 @@ class _objectPool {
     friend class _pattern;
 
 public:
-    _objectPool() {}
+    _objectPool() : _releasedCount(0) { before_end = _released.before_begin(); }
 
     template<typename actualType, typename = _Convertible<actualType*>>
-    _objectPool(const _objectPool<actualType>& objPool) : _pool(objPool._pool), _released(objPool._released) {} 
+    _objectPool(const _objectPool<actualType>& objPool) : _pool(objPool._pool), _released(objPool._released) , _releasedCount(objPool._releasedCount){
+        before_end = _released.before_begin();
+        for (int i = 0; i < _releasedCount; ++i) {
+            ++before_end;
+        }
+    } 
 
     template<typename actualType, typename... Args, typename = _Convertible<actualType*>>
     visitor_ptr<actualType> make_visitor(Args&&... args) {
@@ -41,7 +46,8 @@ public:
     actualType* release(const visitor_ptr<actualType> &v_ptr) {
         if (v_ptr._objPool == this && v_ptr._index < _pool.size() && _pool[v_ptr._index]) {
             ++_releasedCount;
-            _released.insert_after(_released.end(), v_ptr.index);
+            _released.insert_after(before_end, v_ptr.index());
+            ++before_end;
             return _pool[v_ptr._index].release();
         } 
         return nullptr;
@@ -63,6 +69,7 @@ public:
 private:
     std::vector<std::unique_ptr<elemType>> _pool;
     std::forward_list<unsigned int> _released;
+    std::forward_list<unsigned int>::iterator before_end;
     unsigned int _releasedCount;
 
     template<typename actualType, typename... Args>

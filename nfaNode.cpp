@@ -14,6 +14,27 @@ void rgx::_NFA_Node::err() {
     exit(-1);
 }
 
+//vector<visitor_ptr<_NFA_Node>> rgx::_NFA_Node::nonEpsilonEdgeVec() {
+//    vector<visitor_ptr<_NFA_Node>> neev;
+//    for (unsigned int i = 0; i < edges.size(); ++i) {
+//        if (!edges[i]->isEpsilonEdge()) {
+//            neev.push_back(edges[i]->_toNode);
+//        }
+//    }
+//    return neev;
+//}
+
+
+void rgx::_NFA_Node::deleteEpsilonEdge() {
+    vector<unique_ptr<_NFA_Edge>> noEpsilonEdges;    
+    for (auto &ptr : edges) {
+        if(!ptr->isEpsilonEdge()) {
+            noEpsilonEdges.push_back(std::move(ptr));
+        }
+    }
+    swap(noEpsilonEdges, edges);
+}
+
 void rgx::_NFA_Node::err(const string& msg) {
     cout << "\n--------------------------------------" << endl
         << msg 

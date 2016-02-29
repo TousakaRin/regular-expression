@@ -277,9 +277,10 @@ void rgx::_numCount_node::generateNFA(_pattern& pattern) {
         err(" 生成NFA时出错 ");
     } 
     auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
+    auto endNode = pattern.getObjPool().make_visitor<_NFA_Node>();
     startNode->addLoopStartEdge(_left->_NFAptr->first, *this);
-    _left->_NFAptr->second->addLoopEndEdge(_left->_NFAptr->first, *this);
-    _NFAptr.reset(new _NFA(startNode, _left->_NFAptr->second));
+    _left->_NFAptr->second->addLoopEndEdge(endNode, *this);
+    _NFAptr.reset(new _NFA(startNode, endNode));
 }
 
 /*-----------------------------------------------*/
