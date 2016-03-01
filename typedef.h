@@ -8,3 +8,4 @@ enum position_type {LINE_BEGIN, LINE_END, STRING_BEGIN, STRING_END, BREAK_OFF, N
 
 }
 #endif
+

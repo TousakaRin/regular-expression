@@ -50,3 +50,4 @@ typedef std::unique_ptr<_NFA> _NFA_Ptr;
 
 }
 #endif
+

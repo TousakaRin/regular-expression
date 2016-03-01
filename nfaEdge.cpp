@@ -197,3 +197,4 @@ string rgx::_positionEdge::toString() {
 _positionEdge* rgx::_positionEdge::makeCopy() const {
     return new _positionEdge(*this);
 }
+

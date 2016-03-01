@@ -111,3 +111,4 @@ void rgx::_NFA_Node::addPositionEdge(visitor_ptr<_NFA_Node> &goalNode, const _po
     edges.push_back(unique_ptr<_NFA_Edge>(
                 new _positionEdge(goalNode, psn._position)));
 }
+

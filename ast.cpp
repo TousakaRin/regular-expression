@@ -21,7 +21,14 @@ void rgx::_ast::err() {
 }
 
 
-rgx::_ast::_ast(const string &_regular_expression) : _build_type(build_to_nfa), _re(string_to_ucs2(_regular_expression)), _pos(0) , _captureIndex(0) , _edgeMgr(make_shared<_edgeManager>()) {
+rgx::_ast::_ast(const string &_regular_expression) 
+        : _build_type(build_to_nfa),
+        _re(string_to_ucs2(_regular_expression)), 
+        _pos(0) , 
+        _captureIndex(0) , 
+        _edgeMgr(make_shared<_edgeManager>()) ,
+        _nameMap(unique_ptr<map<u16string, unsigned int>> (new map<u16string, unsigned int>())){
+
     _root = re_term();
     if (_root != nullptr && _pos < _re.size()) {
         err();
@@ -384,7 +391,7 @@ visitor_ptr<_capture_node> rgx::_ast::namedCapture() {
             ++_pos;    //match ')'
             r->_left = n;
             r->_captureIndex = ++_captureIndex;
-            _nameMap[r->_captureName] = _captureIndex;
+           (*_nameMap)[r->_captureName] = _captureIndex;
             return r;
         } else {
             err();
@@ -535,11 +542,11 @@ visitor_ptr<_reference_node> rgx::_ast::unnamedReference() {
 
 
 visitor_ptr<_reference_node> rgx::_ast::namedReference(const u16string &name) {
-    if (_nameMap.find(name) == _nameMap.end()) {
+    if (_nameMap->find(name) == _nameMap->end()) {
         err();
         return nullptr;
     }
-    return _objPool.make_visitor<_reference_node>(_nameMap[name], name);
+    return _objPool.make_visitor<_reference_node>((*_nameMap)[name], name);
 }
 
 visitor_ptr<_position_node> rgx::_ast::position_term() {

@@ -15,7 +15,7 @@ using namespace rgx;
 
 /*=================================PATTERN=========================================*/
 
-rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr)  {
+rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr), _nameMap(std::move(ast._nameMap)) {
     //使用非递归方法后序遍历ast来生成NFA
     stack<visitor_ptr<_astNode>> s;  
     auto p = ast._root;  
@@ -154,8 +154,8 @@ _dfa_pattern::_dfa_pattern(_ast& ast) : _pattern(ast)/*, _DFAptr(make_shared<_DF
 }
 
 
-std::shared_ptr<matchObj> _dfa_pattern::match(const std::u16string&) {
-    return make_shared<matchObj>();
+std::unique_ptr<matchObj> _dfa_pattern::match(const std::u16string&) {
+    return nullptr;
 }
 
 std::shared_ptr<matchObj> _dfa_pattern::search(const std::u16string&) {
@@ -176,8 +176,10 @@ _nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
 
 }
 
-std::shared_ptr<matchObj> _nfa_pattern::match(const std::u16string&) {
-    return make_shared<matchObj>();
+std::unique_ptr<matchObj> _nfa_pattern::match(const std::u16string&) {
+    unsigned int _pos = 0;
+    ++_pos;
+    return nullptr;
 }
 
 std::shared_ptr<matchObj> _nfa_pattern::search(const std::u16string&) {

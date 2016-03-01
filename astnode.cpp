@@ -368,3 +368,4 @@ void rgx::_position_node::generateNFA(_pattern& pattern) {
     startNode->addPositionEdge(finishNode, *this);
     _NFAptr.reset(new _NFA(startNode, finishNode));
 }
+
