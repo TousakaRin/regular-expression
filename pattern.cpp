@@ -8,6 +8,7 @@
 #include "astnode.h"
 #include "nfaEdge.h"
 #include "nfaNode.h"
+#include "thread.h"
 
 using namespace std;
 using namespace rgx;
@@ -190,5 +191,14 @@ std::shared_ptr<std::vector<matchObj>> _nfa_pattern::findall(const std::u16strin
     return make_shared<vector<matchObj>>();
 }
 
-
+std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM() {
+    stack<_thread> threadstack;    
+    threadstack.push(_thread());
+    unique_ptr<matchObj> storgePtr;
+    while (!threadstack.empty()) {
+        threadstack.top();
+        threadstack.pop();
+    }
+    return nullptr; 
+}
 

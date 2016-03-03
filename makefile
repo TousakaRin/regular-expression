@@ -1,4 +1,4 @@
-objects = main.o ast.o astnode.o matchObj.o rgx.o stringTools.o pattern.o edgeManager.o nfaEdge.o nfaNode.o
+objects = main.o ast.o astnode.o matchObj.o rgx.o stringTools.o pattern.o edgeManager.o nfaEdge.o nfaNode.o thread.o
 flag = -std=c++11 -Wall -g
 
 test : $(objects)
@@ -11,6 +11,7 @@ main.o : ast.h astnode.h stringTools.h testCase.h\
 ast.o : ast.h visitor_ptr.h objectPool.h\
 	ast.cpp
 	g++-5 -c $(flag) ast.cpp
+
 astnode.o : astnode.h stringTools.h typedef.h\
 	astnode.cpp
 	g++-5 -c $(flag) astnode.cpp
@@ -42,6 +43,10 @@ nfaEdge.o : nfaEdge.h typedef.h\
 nfaNode.o : ast.h pattern.h nfaEdge.h nfaNode.h \
 	nfaNode.cpp
 	g++-5 -c $(flag) nfaNode.cpp
+
+thread.o : thread.h edgeManager.h matchObj.h visitor_ptr.h\
+	thread.cpp
+	g++-5 -c $(flag) thread.cpp
 
 .PHONY : clean
 clean :

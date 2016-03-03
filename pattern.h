@@ -71,6 +71,9 @@ public:
     virtual std::unique_ptr<matchObj> match(const std::u16string&);
     virtual std::shared_ptr<matchObj> search(const std::u16string&);
     virtual std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
+
+private:
+    std::unique_ptr<matchObj> backtrackingVM();
 };
 
 }
