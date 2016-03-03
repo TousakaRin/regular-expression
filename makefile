@@ -36,7 +36,7 @@ edgeManager.o : edgeManager.h \
 	edgeManager.cpp
 	g++-5 -c $(flag) edgeManager.cpp
 
-nfaEdge.o : nfaEdge.h typedef.h\
+nfaEdge.o : nfaEdge.h typedef.h edgeManager.h\
 	nfaEdge.cpp
 	g++-5 -c $(flag) nfaEdge.cpp
 

@@ -35,6 +35,8 @@ std::string int2string(int);                                    //int转string
 std::string bool2string(bool);                                  //bool转string
 std::string ucs2_to_string(const std::u16string&);              //将ucs2编码的u16string转换为utf8编码的string
 std::u16string string_to_ucs2(const std::string&);              //将utf8编码的string转换为ucs2编码的u16string
+bool isDigit(char16_t);                                         //判断是否是数字
+bool isLetter(char16_t);                                        //判断是否为字母
 bool isLittleEndien();                                          //判断机器大小端，在将u16string转string时需要用到
 
 

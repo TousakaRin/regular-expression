@@ -155,16 +155,16 @@ _dfa_pattern::_dfa_pattern(_ast& ast) : _pattern(ast)/*, _DFAptr(make_shared<_DF
 }
 
 
-std::unique_ptr<matchObj> _dfa_pattern::match(const std::u16string&) {
+std::unique_ptr<matchObj> rgx::_dfa_pattern::_match(const std::u16string&, unsigned int) {
     return nullptr;
 }
 
-std::shared_ptr<matchObj> _dfa_pattern::search(const std::u16string&) {
-    return make_shared<matchObj>();
+std::unique_ptr<matchObj> rgx::_dfa_pattern::_search(const std::u16string&) {
+    return nullptr;
 }
 
-std::shared_ptr<std::vector<matchObj>> _dfa_pattern::findall(const std::u16string&) {
-    return make_shared<vector<matchObj>>();
+std::unique_ptr<std::vector<matchObj>> rgx::_dfa_pattern::_findall(const std::u16string&) {
+    return nullptr;
 }
 
 
@@ -177,28 +177,31 @@ _nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
 
 }
 
-std::unique_ptr<matchObj> _nfa_pattern::match(const std::u16string&) {
+std::unique_ptr<matchObj> _nfa_pattern::_match(const u16string&, unsigned int) {
     unsigned int _pos = 0;
     ++_pos;
     return nullptr;
 }
 
-std::shared_ptr<matchObj> _nfa_pattern::search(const std::u16string&) {
-    return make_shared<matchObj>();
+std::unique_ptr<matchObj> _nfa_pattern::_search(const u16string&) {
+    return nullptr;
 }
 
-std::shared_ptr<std::vector<matchObj>> _nfa_pattern::findall(const std::u16string&) {
-    return make_shared<vector<matchObj>>();
+std::unique_ptr<std::vector<matchObj>> _nfa_pattern::_findall(const u16string&) {
+    return nullptr;
 }
 
-std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM() {
+std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM(const u16string &input, unsigned int startPosition) {
     stack<_thread> threadstack;    
-    threadstack.push(_thread());
-    unique_ptr<matchObj> storgePtr;
+    threadstack.push(_thread(_NFAptr->first, startPosition));
+    unique_ptr<matchObj> storgePtr(new matchObj());
     while (!threadstack.empty()) {
-        threadstack.top();
         threadstack.pop();
+        if (threadstack.top().match(input, threadstack, storgePtr, _edgeMgr) == 0) {
+            return storgePtr;
+        } 
     }
-    return nullptr; 
+    storgePtr->clear();  //匹配失败
+    return storgePtr;
 }
 
