@@ -23,6 +23,7 @@ class _NFA_Edge {
 public:
     _NFA_Edge(const visitor_ptr<_NFA_Node> &toNode);
     _NFA_Edge(const _NFA_Edge&);
+
     visitor_ptr<_NFA_Node> _toNode;
     virtual bool isEpsilonEdge() const = 0;
     virtual std::string toString();
@@ -36,6 +37,7 @@ class _epsilonEdge : public _NFA_Edge {
 public:
     _epsilonEdge(const _epsilonEdge&);
     _epsilonEdge(const visitor_ptr<_NFA_Node> &toNode);
+
     virtual std::string toString();
     bool isEpsilonEdge() const { return true; }
     virtual _epsilonEdge* makeCopy() const;
@@ -48,6 +50,7 @@ class _charSetEdge : public _NFA_Edge {
 public:
     _charSetEdge(const _charSetEdge&);
     _charSetEdge(const visitor_ptr<_NFA_Node> &toNode, std::set<unsigned int>&& s, unsigned int delopt);
+
     std::set<unsigned int> _acceptSet;
     unsigned int _delOPT;
     virtual std::string toString();
@@ -60,10 +63,13 @@ public:
 class _loopStartEdge : public _NFA_Edge {
 public:
     _loopStartEdge(const _loopStartEdge&);
-    _loopStartEdge(const visitor_ptr<_NFA_Node> &toNode, int llt, int ult, bool grd);
+    _loopStartEdge(const visitor_ptr<_NFA_Node> &toNode, const visitor_ptr<_NFA_Node> &loopEndNode, int llt, int ult, bool grd);
+
     virtual std::string toString();
     int _lowerLoopTimes, _upperLoopTimes;
     bool _greedy;
+    visitor_ptr<_NFA_Node> _loopEndNode;
+
     virtual _loopStartEdge* makeCopy() const;
     bool isEpsilonEdge() const { return false; }
     virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
@@ -73,11 +79,13 @@ public:
 class _loopEndEdge : public _NFA_Edge {
 public:
     _loopEndEdge(const _loopEndEdge&);
-    _loopEndEdge(const visitor_ptr<_NFA_Node> &toNode, int llt, int ult, bool grd);
+    _loopEndEdge(const visitor_ptr<_NFA_Node> &toNode, const visitor_ptr<_NFA_Node>& loopStartNode, int llt, int ult, bool grd);
+
     virtual std::string toString();
     virtual _loopEndEdge* makeCopy() const;
     int _lowerLoopTimes, _upperLoopTimes;
     bool _greedy;
+    visitor_ptr<_NFA_Node> _loopStartNode;
     bool isEpsilonEdge() const { return false; }
     virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
 };
@@ -131,6 +139,7 @@ public:
     bool isWordBreak(const std::u16string&, unsigned int);
     virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
 };
+
 
 }
 #endif

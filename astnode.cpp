@@ -271,6 +271,7 @@ string rgx::_numCount_node::toString() {
 
 
 void rgx::_numCount_node::generateNFA(_pattern& pattern) {
+    //startNode中应该加入preCheck信息，endNode中应该加入postCheck信息
     cout << "numCount_node_generate_NFA\n" << endl;
     if (!_left || (_left && !_left->_NFAptr) || _right) {
         cout << toString() << endl;
@@ -278,8 +279,8 @@ void rgx::_numCount_node::generateNFA(_pattern& pattern) {
     } 
     auto startNode = pattern.getObjPool().make_visitor<_NFA_Node>();
     auto endNode = pattern.getObjPool().make_visitor<_NFA_Node>();
-    startNode->addLoopStartEdge(_left->_NFAptr->first, *this);
-    _left->_NFAptr->second->addLoopEndEdge(endNode, *this);
+    startNode->addLoopStartEdge(_left->_NFAptr->first, startNode, *this);
+    _left->_NFAptr->second->addLoopEndEdge(endNode, endNode, *this);
     _NFAptr.reset(new _NFA(startNode, endNode));
 }
 

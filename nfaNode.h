@@ -29,8 +29,8 @@ public:
     std::vector<std::unique_ptr<_NFA_Edge>> edges;
     void addEpsilonEdge(const visitor_ptr<_NFA_Node>&);
     void addCharSetEdge(visitor_ptr<_NFA_Node>&, const _charSet_node&);
-    void addLoopStartEdge(visitor_ptr<_NFA_Node>&, const _numCount_node&);
-    void addLoopEndEdge(visitor_ptr<_NFA_Node>&, const _numCount_node&);
+    void addLoopStartEdge(visitor_ptr<_NFA_Node>&, const visitor_ptr<_NFA_Node>&, const _numCount_node&);
+    void addLoopEndEdge(visitor_ptr<_NFA_Node>&, const visitor_ptr<_NFA_Node>&, const _numCount_node&);
     void addCaptureStartEdge(visitor_ptr<_NFA_Node>&, const _capture_node&);
     void addCaptureEndEdge(visitor_ptr<_NFA_Node>&, const _capture_node&);
     void addReferenceEdge(visitor_ptr<_NFA_Node>&, const _reference_node&);

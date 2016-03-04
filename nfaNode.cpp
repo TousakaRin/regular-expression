@@ -73,17 +73,17 @@ void rgx::_NFA_Node::setEffective() {
 }
 
 
-void rgx::_NFA_Node::addLoopStartEdge(visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+void rgx::_NFA_Node::addLoopStartEdge(visitor_ptr<_NFA_Node> &goalNode, const visitor_ptr<_NFA_Node>& loopEndNode, const _numCount_node& ncn) {
     goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
-                new _loopStartEdge(goalNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
+                new _loopStartEdge(goalNode, loopEndNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
 }
 
 
-void rgx::_NFA_Node::addLoopEndEdge(visitor_ptr<_NFA_Node> &goalNode, const _numCount_node& ncn) {
+void rgx::_NFA_Node::addLoopEndEdge(visitor_ptr<_NFA_Node> &goalNode, const visitor_ptr<_NFA_Node>& loopStartNode, const _numCount_node& ncn) {
     goalNode->setEffective();
     edges.push_back(unique_ptr<_NFA_Edge>(
-                new _loopEndEdge(goalNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
+                new _loopEndEdge(goalNode, loopStartNode, ncn._lowerLoopTimes, ncn._upperLoopTimes, ncn._greedy)));
 }
 
 

@@ -86,11 +86,12 @@ int rgx::_charSetEdge::match(const std::u16string& input, _thread& thread, std::
 
 /*================================loopStartEdge===========================================*/
 
-rgx::_loopStartEdge::_loopStartEdge(const visitor_ptr<_NFA_Node> &toNode, int llt, int ult, bool grd) 
-    : _NFA_Edge(toNode), _lowerLoopTimes(llt), _upperLoopTimes(ult), _greedy(grd) {}
+rgx::_loopStartEdge::_loopStartEdge(const visitor_ptr<_NFA_Node> &toNode, const visitor_ptr<_NFA_Node> &loopEndNode, int llt, int ult, bool grd) 
+    : _NFA_Edge(toNode), _lowerLoopTimes(llt), _upperLoopTimes(ult), _greedy(grd), _loopEndNode(loopEndNode) {}
 
 
-rgx::_loopStartEdge::_loopStartEdge(const _loopStartEdge& lse) : _NFA_Edge(lse._toNode), _lowerLoopTimes(lse._lowerLoopTimes), _upperLoopTimes(lse._upperLoopTimes), _greedy(lse._greedy) {
+rgx::_loopStartEdge::_loopStartEdge(const _loopStartEdge& lse)
+    : _NFA_Edge(lse._toNode), _lowerLoopTimes(lse._lowerLoopTimes), _upperLoopTimes(lse._upperLoopTimes), _greedy(lse._greedy), _loopEndNode(lse._loopEndNode) {
     
 }
 
@@ -108,17 +109,26 @@ _loopStartEdge* rgx::_loopStartEdge::makeCopy() const {
 }
 
 int rgx::_loopStartEdge::match(const std::u16string&, _thread& thread, std::stack<_thread>& threadstack, const std::unique_ptr<matchObj>&, const shared_ptr<_edgeManager>&) {
+    //此处应该preCheck先
+    if (_upperLoopTimes == 0) {
+        thread._nodePtr = thread._nodePtr->edges[thread._edgeIndex]->_toNode;
+        thread._edgeIndex = 0;
+        return 0;
+    } else if (_lowerLoopTimes > 0) {
+    //    if (thread._loopTimes.top().first != ) 
+    }
     return 0;
 }
 
 
 /*===================================loopEndEdge==========================================*/
 
-rgx::_loopEndEdge::_loopEndEdge(const visitor_ptr<_NFA_Node> &toNode, int llt, int ult, bool grd)
-    : _NFA_Edge(toNode), _lowerLoopTimes(llt), _upperLoopTimes(ult), _greedy(grd) {}
+rgx::_loopEndEdge::_loopEndEdge(const visitor_ptr<_NFA_Node> &toNode, const visitor_ptr<_NFA_Node>& loopStartNode, int llt, int ult, bool grd)
+    : _NFA_Edge(toNode), _lowerLoopTimes(llt), _upperLoopTimes(ult), _greedy(grd) , _loopStartNode(loopStartNode) {}
 
 
-rgx::_loopEndEdge::_loopEndEdge(const _loopEndEdge& lee) : _NFA_Edge(lee._toNode), _lowerLoopTimes(lee._lowerLoopTimes), _upperLoopTimes(lee._upperLoopTimes), _greedy(lee._greedy) {
+rgx::_loopEndEdge::_loopEndEdge(const _loopEndEdge& lee) 
+    : _NFA_Edge(lee._toNode), _lowerLoopTimes(lee._lowerLoopTimes), _upperLoopTimes(lee._upperLoopTimes), _greedy(lee._greedy), _loopStartNode(lee._loopStartNode)  {
 
 }
 
