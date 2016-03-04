@@ -13,8 +13,8 @@ class visitor_ptr {
     template<typename Ptr>
 	using _Convertible = typename std::enable_if<std::is_convertible<Ptr, elemType*>::value>::type;
 
-    template<typename Ptr>
-    using _CanConvertToPool = typename std::enable_if<std::is_convertible<elemType*, Ptr>::value>::type;
+    //template<typename Ptr>
+    //using _CanConvertToPool = typename std::enable_if<std::is_convertible<elemType*, Ptr>::value>::type;
 
     template<typename T>
     friend class visitor_ptr;
@@ -24,45 +24,41 @@ class visitor_ptr {
 
 public:
 
-    visitor_ptr(const visitor_ptr& v_ptr) : _index(v_ptr._index), _objPool(v_ptr._objPool) {}
+    visitor_ptr(const visitor_ptr& v_ptr) : _rawPtr(v_ptr._rawPtr) {}
 
     template<typename T, typename = _Convertible<T*>>
 	visitor_ptr(const visitor_ptr<T>& v_ptr) : 
-        _index(v_ptr._index), 
-        _objPool(v_ptr._objPool)  { }
+        _rawPtr(static_cast<elemType*>(v_ptr._rawPtr))  { }
 
-    visitor_ptr() : _index(0), _objPool(nullptr) {}
+    visitor_ptr() : _rawPtr(nullptr) {}
 
-    visitor_ptr(std::nullptr_t) : _index(0), _objPool(nullptr) {}
-
-    unsigned int index() const { return _index; }
+    visitor_ptr(std::nullptr_t) : _rawPtr(nullptr) {}
 
     elemType *get()  { return this->operator->(); }
 
     elemType* operator->() {
-        return static_cast<elemType*>(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index].get());
+        return _rawPtr;
     }
 
     const elemType* operator->() const {
-        return static_cast<elemType*>(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index].get());
+        return _rawPtr; 
     }
 
     elemType& operator*() {
-        return *(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index]);
+        return *_rawPtr; 
     }
 
     const elemType& operator*() const {
-        return *(static_cast<const _objectPool<elemType>*>(_objPool)->_pool[_index]);
+        return *_rawPtr;
     }
 
     visitor_ptr& operator=(const visitor_ptr& v_ptr) {
-        _index = v_ptr._index;
-        _objPool = v_ptr._objPool;
+        _rawPtr = v_ptr._rawPtr;
         return *this;
     }
 
     bool operator==(const visitor_ptr& v_ptr) const {
-        return _objPool == v_ptr._objPool && _index == v_ptr._index;
+        return _rawPtr == v_ptr._rawPtr;
     }
     
     bool operator!=(const visitor_ptr& v_ptr) const {
@@ -70,27 +66,25 @@ public:
     }
 
     bool operator==(std::nullptr_t) const {
-        return _objPool == nullptr;
+        return _rawPtr == nullptr;
     }
 
     bool operator!=(std::nullptr_t) const {
-        return _objPool != nullptr;
+        return _rawPtr != nullptr;
     }
 
     operator bool() const {
-        return _objPool != nullptr; 
+        return _rawPtr != nullptr; 
     }
-//    template<typename T, typename = _Convertible<elemType*>>
-//    operator visitor_ptr<T>() const {
-//        return visitor_ptr<T>(_objPool, _index);    
-//    }
+
+    bool operator <(const visitor_ptr &v_ptr) {
+        return _rawPtr < v_ptr._rawPtr;
+    }
     
 
 private:
-    template<typename poolElemType, typename = _CanConvertToPool<elemType*>>
-    visitor_ptr(_objectPool<poolElemType> *pool, unsigned int index) : _index(index), _objPool(pool) {}
-    unsigned int _index;
-    const void *_objPool;
+    visitor_ptr (elemType * ptr) : _rawPtr(ptr) {};
+    elemType * _rawPtr;
 
 };
 

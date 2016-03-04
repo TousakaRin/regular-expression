@@ -25,30 +25,21 @@ class _objectPool {
 public:
     _objectPool() : _releasedCount(0) { before_end = _released.before_begin(); }
 
-    template<typename actualType, typename = _Convertible<actualType*>>
-    _objectPool(const _objectPool<actualType>& objPool) : _pool(objPool._pool), _released(objPool._released) , _releasedCount(objPool._releasedCount){
-        before_end = _released.before_begin();
-        for (int i = 0; i < _releasedCount; ++i) {
-            ++before_end;
-        }
-    } 
-
     template<typename actualType, typename... Args, typename = _Convertible<actualType*>>
     visitor_ptr<actualType> make_visitor(Args&&... args) {
         if (_released.empty()) {
-            return visitor_ptr<actualType>(this, back_insert<actualType>(std::forward<Args>(args)...));
+            return visitor_ptr<actualType>(back_insert<actualType>(std::forward<Args>(args)...));
         } else {
-            return visitor_ptr<actualType>(this, front_insert<actualType>(std::forward<Args>(args)...));
+            return visitor_ptr<actualType>(front_insert<actualType>(std::forward<Args>(args)...));
         }
     }
 
-    template<typename actualType, typename = _Convertible<actualType*>>
-    actualType* release(const visitor_ptr<actualType> &v_ptr) {
-        if (v_ptr._objPool == this && v_ptr._index < _pool.size() && _pool[v_ptr._index]) {
+    elemType* release(unsigned int index) {
+        if (index < _pool.size()) {
             ++_releasedCount;
-            _released.insert_after(before_end, v_ptr.index());
+            _released.insert_after(before_end, index);
             ++before_end;
-            return _pool[v_ptr._index].release();
+            return _pool[index].release();
         } 
         return nullptr;
     }
@@ -73,21 +64,23 @@ private:
     unsigned int _releasedCount;
 
     template<typename actualType, typename... Args>
-    unsigned int back_insert(Args&&... args) {
-        _pool.push_back(std::unique_ptr<elemType>(new actualType(std::forward<Args>(args)...)));
-        return _pool.size() - 1;
+    actualType *back_insert(Args&&... args) {
+        actualType * elem = new actualType(std::forward<Args>(args)...);
+        _pool.push_back(std::unique_ptr<elemType>(elem));
+        return elem;
     }
 
     template<typename actualType, typename... Args>
-    unsigned int front_insert(Args&&... args) {
+    actualType *front_insert(Args&&... args) {
         unsigned int index = _released.front();
         _released.erase_after(_released.before_begin());
-        _pool[index].reset(new actualType(std::forward<Args>(args)...));
-        return index;
+        actualType* elem = new actualType(std::forward<Args>(args)...);
+        _pool[index].reset(elem);
+        return elem;
     }
 
     visitor_ptr<elemType> get_visitor(unsigned int index) {
-        return visitor_ptr<elemType>(this, index);        
+        return visitor_ptr<elemType>(_pool[index].get());        
     }
 };
 
