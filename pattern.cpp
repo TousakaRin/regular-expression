@@ -16,7 +16,8 @@ using namespace rgx;
 
 /*=================================PATTERN=========================================*/
 
-rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr), _nameMap(std::move(ast._nameMap)) {
+rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr), _nameMap(std::move(ast._nameMap)), _captureIndex(ast._captureIndex + 1) {
+    cout << "_CaptureInedx " << _captureIndex << endl;
     //使用非递归方法后序遍历ast来生成NFA
     stack<visitor_ptr<_astNode>> s;  
     auto p = ast._root;  
@@ -105,6 +106,11 @@ void rgx::_pattern::epsilonCut() {
     }
 }
 
+unique_ptr<matchObj> rgx::_pattern::match(const u16string&s, unsigned int startPosition) {
+    return _match(s, startPosition);
+}
+
+
 void rgx::_pattern::mergeClosure(unsigned int keyNode) {
 
     /*
@@ -177,10 +183,8 @@ _nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
 
 }
 
-std::unique_ptr<matchObj> _nfa_pattern::_match(const u16string&, unsigned int) {
-    unsigned int _pos = 0;
-    ++_pos;
-    return nullptr;
+std::unique_ptr<matchObj> _nfa_pattern::_match(const u16string& input, unsigned int startPosition) {
+    return backtrackingVM(input, startPosition);
 }
 
 std::unique_ptr<matchObj> _nfa_pattern::_search(const u16string&) {
@@ -193,15 +197,15 @@ std::unique_ptr<std::vector<matchObj>> _nfa_pattern::_findall(const u16string&) 
 
 std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM(const u16string &input, unsigned int startPosition) {
     stack<_thread> threadstack;    
-    threadstack.push(_thread(_NFAptr->first, startPosition));
-    unique_ptr<matchObj> storgePtr(new matchObj());
+    threadstack.push(_thread(_NFAptr->first, _captureIndex, startPosition, 0));
     while (!threadstack.empty()) {
+        auto cthread = threadstack.top();
         threadstack.pop();
-        if (threadstack.top().match(input, threadstack, storgePtr, _edgeMgr) == 0) {
-            return storgePtr;
+        if (cthread.match(input, threadstack, _edgeMgr) == 0) {
+//            cthread._capture->justToTest("abcaabc");
+            return std::move(cthread._capture);
         } 
     }
-    storgePtr->clear();  //匹配失败
-    return storgePtr;
+    return nullptr;
 }
 

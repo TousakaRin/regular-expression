@@ -28,7 +28,7 @@ public:
     virtual bool isEpsilonEdge() const = 0;
     virtual std::string toString();
     virtual _NFA_Edge* makeCopy() const = 0;
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&) = 0;
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&) = 0;
 };
 
 
@@ -41,7 +41,7 @@ public:
     virtual std::string toString();
     bool isEpsilonEdge() const { return true; }
     virtual _epsilonEdge* makeCopy() const;
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 
@@ -56,7 +56,7 @@ public:
     virtual std::string toString();
     bool isEpsilonEdge() const { return false; }
     virtual _charSetEdge* makeCopy() const;
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 //循环开始边
@@ -72,7 +72,7 @@ public:
 
     virtual _loopStartEdge* makeCopy() const;
     bool isEpsilonEdge() const { return false; }
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 //循环结束边
@@ -87,7 +87,7 @@ public:
     bool _greedy;
     visitor_ptr<_NFA_Node> _loopStartNode;
     bool isEpsilonEdge() const { return false; }
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 //表示开始捕获
@@ -99,7 +99,7 @@ public:
     virtual std::string toString();
     virtual _captureStartEdge* makeCopy() const;
     bool isEpsilonEdge() const { return false; }
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 //表示捕获结束,保存捕获结果
@@ -111,7 +111,7 @@ public:
     virtual std::string toString();
     virtual _captureEndEdge* makeCopy() const;
     bool isEpsilonEdge() const { return false; }
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 //表示引用边
@@ -123,7 +123,7 @@ public:
     virtual  _referenceEdge* makeCopy() const;
     virtual std::string toString();
     bool isEpsilonEdge() const { return false; }
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 
@@ -137,7 +137,7 @@ public:
     virtual _positionEdge* makeCopy() const;
     bool isEpsilonEdge() const { return false; }
     bool isWordBreak(const std::u16string&, unsigned int);
-    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::unique_ptr<matchObj>&, const std::shared_ptr<_edgeManager>&);
+    virtual int match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
 };
 
 

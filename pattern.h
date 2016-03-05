@@ -47,6 +47,7 @@ public:
 protected:
     std::shared_ptr<_edgeManager> _edgeMgr;
     std::unique_ptr<std::map<std::u16string, unsigned int>> _nameMap;         //具名捕获-->捕获index的转换
+    unsigned int _captureIndex;
     _NFA_Ptr _NFAptr;
 
 private:

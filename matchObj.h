@@ -10,14 +10,18 @@ namespace rgx {
 class _captureStartEdge;
 class _captureEndEdge;
 class _referenceEdge;
+class _thread;
 
 class matchObj {
     friend _captureStartEdge;
     friend _captureEndEdge;
     friend _referenceEdge;
+    friend _thread;
 
 public:
-    matchObj() : _pos(0), _endpos(0), _lastindex(0), _lastCaptureIndex(0) {}
+    matchObj(unsigned int maxCaptureSlot)
+        : _pos(0), _endpos(0), _lastindex(0), _lastCaptureIndex(0), _capVector(maxCaptureSlot, std::pair<unsigned int, unsigned int>(0, 0)){}
+
     std::vector<std::wstring>  group(unsigned int index);
     //返回编号为index的group，index为0时，表示匹配到的字符串
     
@@ -39,6 +43,8 @@ public:
     unsigned int endpos() const;          // 终点
     int lastindex() const;                
     int lastgroup() const;
+
+    void justToTest(const std::u16string&);
 
 private:
     unsigned int _pos;

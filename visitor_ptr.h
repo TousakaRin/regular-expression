@@ -80,7 +80,17 @@ public:
     bool operator <(const visitor_ptr &v_ptr) {
         return _rawPtr < v_ptr._rawPtr;
     }
-    
+
+    visitor_ptr& operator++() {
+        ++_rawPtr;
+        return *this;
+    }
+ 
+    visitor_ptr operator++(int) {
+        auto copyed = *this;
+        ++this;
+        return copyed;
+    }
 
 private:
     visitor_ptr (elemType * ptr) : _rawPtr(ptr) {};

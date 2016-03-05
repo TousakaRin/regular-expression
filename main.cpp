@@ -17,6 +17,9 @@ int main() {
         cout << "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" << s << endl;
         auto pattern = compile(s);
         pattern->traversal();
+        u16string str = string_to_ucs2("abcaabc");
+        auto mb = pattern->match(str);
+        mb->justToTest(str);
     }
 #endif
 
