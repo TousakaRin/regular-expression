@@ -15,6 +15,7 @@ int main() {
 #ifdef _ast_test_
     for (auto &s : testCase) {
         cout << "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" << s << endl;
+        auto ast(s);
         auto pattern = compile(s);
         pattern->traversal();
         u16string str = string_to_ucs2("abcaabc");

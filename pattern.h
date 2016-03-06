@@ -49,6 +49,7 @@ protected:
     std::unique_ptr<std::map<std::u16string, unsigned int>> _nameMap;         //具名捕获-->捕获index的转换
     unsigned int _captureIndex;
     _NFA_Ptr _NFAptr;
+    const std::u16string _re;
 
 private:
     void epsilonCut();                                  //除去不必要的epsilon边

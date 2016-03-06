@@ -16,8 +16,10 @@ using namespace rgx;
 
 /*=================================PATTERN=========================================*/
 
-rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr), _nameMap(std::move(ast._nameMap)), _captureIndex(ast._captureIndex + 1) {
-    cout << "_CaptureInedx " << _captureIndex << endl;
+rgx::_pattern::_pattern(_ast& ast) : _edgeMgr(ast._edgeMgr), _nameMap(std::move(ast._nameMap)), _captureIndex(ast._captureIndex + 1) , _re(std::move(ast._re)){
+    if (!ast._root) {
+        err("正则表达式有错误/为空");
+    }
     //使用非递归方法后序遍历ast来生成NFA
     stack<visitor_ptr<_astNode>> s;  
     auto p = ast._root;  
@@ -176,15 +178,17 @@ std::unique_ptr<std::vector<matchObj>> rgx::_dfa_pattern::_findall(const std::u1
 
 /*===================================NFA_PATTERN===================================*/
 
-_nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
+rgx::_nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
     if (ast._build_type != _ast::build_to_nfa) {
-        err("ast与pattern类型不一致，应为_build_to_nfa");
+        _pattern::err("ast类型不一致，应为build_to_nfa");
     }
 
 }
 
-std::unique_ptr<matchObj> _nfa_pattern::_match(const u16string& input, unsigned int startPosition) {
-    return backtrackingVM(input, startPosition);
+std::unique_ptr<matchObj> rgx::_nfa_pattern::_match(const u16string& input, unsigned int startPosition) {
+    auto matchobj = backtrackingVM(input, startPosition);
+    matchobj->addReAndInput(_re, input);
+    return matchobj;
 }
 
 std::unique_ptr<matchObj> _nfa_pattern::_search(const u16string&) {

@@ -25,6 +25,7 @@ class _preRead_node;
 class _reference_node;
 class _numCount_node;
 class _position_node;
+class _pattern;
 
 /*************************前置声明*****************************/
 
