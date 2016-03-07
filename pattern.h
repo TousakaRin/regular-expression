@@ -53,6 +53,7 @@ protected:
 
 private:
     void epsilonCut();                                  //除去不必要的epsilon边
+    void lookaheadOptimize();
     _objectPool<_NFA_Node>  _objPool;
     void mergeClosure(unsigned int);         //将闭包中的边拷贝到关键节点中,用于epsilonCut() 
     virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int) = 0;

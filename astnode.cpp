@@ -91,12 +91,8 @@ rgx::_charSet_node::_charSet_node(char16_t c) : inversion(false) {
 
 
 void rgx::_charSet_node::addCharRange(const pair<char16_t, char16_t>& cr) {
-    if (auto p = _edgeMgr.lock()) {
-        p->addRange(cr);
-        _acceptSet.push_back(cr);
-    } else {
-        err(" 找不到对象: _edgeMgr");
-    }
+    _edgeMgr->addRange(cr);
+    _acceptSet.push_back(cr);
 }
 
 
@@ -107,13 +103,9 @@ void rgx::_charSet_node::setInversison() {
 
 void rgx::_charSet_node::addWordRange() {
     //左闭右开区间~~~~~
-    if (auto p = _edgeMgr.lock()) {
-        addCharRange(pair<char16_t, char16_t>('a', 'z' + 1));
-        addCharRange(pair<char16_t, char16_t>('A', 'Z' + 1));
-        addCharRange(pair<char16_t, char16_t>('0', '9' + 1));
-    } else {
-        err("in function rgx::_charSet_node::addWordRange()  \n\n 找不到对象: _edgeMgr \n\n");
-    }
+    addCharRange(pair<char16_t, char16_t>('a', 'z' + 1));
+    addCharRange(pair<char16_t, char16_t>('A', 'Z' + 1));
+    addCharRange(pair<char16_t, char16_t>('0', '9' + 1));
 }
 
 void rgx::_charSet_node::addUWordRange() {
@@ -121,16 +113,12 @@ void rgx::_charSet_node::addUWordRange() {
 }
 
 void rgx::_charSet_node::addSpaceRang() {
-    if (auto p = _edgeMgr.lock()) {
-        addCharRange(pair<char16_t, char16_t>('\t', '\t' + 1));
-        addCharRange(pair<char16_t, char16_t>('\r', '\r' + 1));
-        addCharRange(pair<char16_t, char16_t>('\n', '\n' + 1));
-        addCharRange(pair<char16_t, char16_t>('\b', '\b' + 1));
-        addCharRange(pair<char16_t, char16_t>('\f', '\f' + 1));
-        addCharRange(pair<char16_t, char16_t>('\v', '\v' + 1));
-    } else {
-        err("in function rgx::_charSet_node::addSpaceRange()  \n\n 找不到对象: _edgeMgr \n\n");
-    }
+    addCharRange(pair<char16_t, char16_t>('\t', '\t' + 1));
+    addCharRange(pair<char16_t, char16_t>('\r', '\r' + 1));
+    addCharRange(pair<char16_t, char16_t>('\n', '\n' + 1));
+    addCharRange(pair<char16_t, char16_t>('\b', '\b' + 1));
+    addCharRange(pair<char16_t, char16_t>('\f', '\f' + 1));
+    addCharRange(pair<char16_t, char16_t>('\v', '\v' + 1));
 }
 
 void rgx::_charSet_node::addUSpaceRange() {

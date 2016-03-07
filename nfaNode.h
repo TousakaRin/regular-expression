@@ -43,6 +43,7 @@ public:
     void err(const std::string&);
     bool _effective;
     void setEffective();
+    bool lookahead(const std::u16string, unsigned int);
 };
 
 typedef std::pair<visitor_ptr<_NFA_Node>, visitor_ptr<_NFA_Node>> _NFA;

@@ -15,7 +15,7 @@ std::vector<std::string> testCase = {
 //    u8"(?P<namedCapture>abc)*?\\?def"
 //    u8"(?P<namedCapture>a|b)*(?P=namedCapture)e",
 //    u8"(?:a|b|c)*",
-//    u8"(a|b|c)*abc",
+    u8"(a|b|c)*abc",
     ""
 };
 #endif

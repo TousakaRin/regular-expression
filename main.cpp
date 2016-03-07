@@ -10,7 +10,7 @@ using namespace std;
 using namespace rgx;
 
 int main() {
-    cout << "\n\n++++++++++++-------------无敌叼炸天的测试程序-------------++++++++++++\n" << endl;
+    cout << "\n\n++++++++++++-------------------------测试程序-----------------------++++++++++++\n" << endl;
 
 #ifdef _ast_test_
     for (auto &s : testCase) {

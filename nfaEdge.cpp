@@ -23,6 +23,10 @@ string rgx::_NFA_Edge::toString() {
     return info;
 }
 
+bool rgx::_NFA_Edge::lookahead(const u16string&, unsigned int) {
+    return true;
+}
+
 /*================================epsilonEdge==========================================*/
 
 rgx::_epsilonEdge::_epsilonEdge(const visitor_ptr<_NFA_Node> &toNode) 
@@ -42,22 +46,22 @@ string rgx::_epsilonEdge::toString() {
 }
 
 
-int rgx::_epsilonEdge::match(const std::u16string&, _thread&, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&) {
-    cout << "err, 哥的nfa中怎么可能会有epsilon" << endl;
+int rgx::_epsilonEdge::match(const std::u16string&, _thread&, std::stack<_thread>&) {
     return -2;
 }
 
 /*===================================charSetEdge=======================================*/
 
-rgx::_charSetEdge::_charSetEdge(const visitor_ptr<_NFA_Node> &toNode, set<unsigned int> &&s, unsigned int delopt) 
-    : _NFA_Edge(toNode), _acceptSet(s), _delOPT(delopt) {}
+rgx::_charSetEdge::_charSetEdge(const visitor_ptr<_NFA_Node> &toNode, set<unsigned int> &&s, const shared_ptr<_edgeManager>& edgeMgr, unsigned int delopt) 
+    : _NFA_Edge(toNode), _acceptSet(s), _delOPT(delopt), _edgeMgr(edgeMgr) {}
 
 
 _charSetEdge *rgx::_charSetEdge::makeCopy() const {
     return new _charSetEdge(*this);    
 }
 
-rgx::_charSetEdge::_charSetEdge(const _charSetEdge& cse) : _NFA_Edge(cse._toNode), _acceptSet(cse._acceptSet), _delOPT(cse._delOPT) {
+rgx::_charSetEdge::_charSetEdge(const _charSetEdge& cse) 
+    : _NFA_Edge(cse._toNode), _acceptSet(cse._acceptSet), _delOPT(cse._delOPT), _edgeMgr(cse._edgeMgr) {
 
 }
 
@@ -73,17 +77,25 @@ string rgx::_charSetEdge::toString() {
 }
 
 
-int rgx::_charSetEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack, const std::shared_ptr<_edgeManager>& edgeMgr) {
+int rgx::_charSetEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
 //    if (thread._sp < input.size())
 //    cout << "\n charSetEdge " << ucs2_to_string(input.substr(thread._sp, 1)) << "\n" << endl;
 //    else
 //        cout << "\n charSetEdge nononon \n" << endl;
-    if (thread._sp >= input.size() || _acceptSet.find(edgeMgr->getIndex(input[thread._sp])) == _acceptSet.end()) {
+    if (thread._sp >= input.size() || _acceptSet.find(_edgeMgr->getIndex(input[thread._sp])) == _acceptSet.end()) {
         return -1;
     } else {
         ++thread._sp;
-        thread.transTo(_toNode, threadstack);
+        thread.transTo(_toNode, input, threadstack);
         return 0;
+    }
+}
+
+bool rgx::_charSetEdge::lookahead(const u16string& input, unsigned int index) {
+    if (_acceptSet.find(_edgeMgr->getIndex(input[index])) == _acceptSet.end()) {
+        return false;
+    } else {
+        return true;
     }
 }
 
@@ -111,33 +123,37 @@ _loopStartEdge* rgx::_loopStartEdge::makeCopy() const {
     return new _loopStartEdge(*this);
 }
 
-int rgx::_loopStartEdge::match(const std::u16string&, _thread& thread, std::stack<_thread>& threadstack, const shared_ptr<_edgeManager>&) {
+int rgx::_loopStartEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
 //    cout << "_loopStartEdge\n\n" << endl;
     //此处应该preCheck先
     if (_upperLoopTimes == 0) {
         thread._loopTimes.push(0);
-        thread.transTo(_loopEndNode, threadstack);
+        thread.transTo(_loopEndNode, input, threadstack);
         return 0;
     } else if (_lowerLoopTimes > 0){
         thread._loopTimes.push(1);
-        thread.transTo(_toNode, threadstack);
+        thread.transTo(_toNode, input, threadstack);
     } else {
         //  _lowerLoopTimes = 0 && _upperLoopTimes != 0, 此时在loopstartedge根据是否贪婪进行不同的split
         if (_greedy) {
             //将循环0次压栈,贪婪失败时尝试
             for (unsigned int i = 0; i < _loopEndNode->edges.size(); ++i) {
-                threadstack.push(_thread(_loopEndNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                if (_loopEndNode->edges[i]->lookahead(input, thread._sp)) {
+                    threadstack.push(_thread(_loopEndNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                }
             }
             //进入循环,记录循环次数
             thread._loopTimes.push(1);
-            thread.transTo(_toNode, threadstack);
+            thread.transTo(_toNode, input, threadstack);
         } else {
             //将贪婪循环压栈
             for (unsigned int i = 0; i < _toNode->edges.size(); ++i) {
-                threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                if (_toNode->edges[i]->lookahead(input, thread._sp)) {
+                    threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                }
             }
             //优先执行非贪婪部分
-            thread.transTo(_loopEndNode, threadstack);
+            thread.transTo(_loopEndNode, input,  threadstack);
         }
     }
     return 0;
@@ -168,15 +184,15 @@ _loopEndEdge* rgx::_loopEndEdge::makeCopy() const {
     return new  _loopEndEdge(*this);
 }
 
-int rgx::_loopEndEdge::match(const std::u16string&, _thread& thread, std::stack<_thread>& threadstack,  const shared_ptr<_edgeManager>&) {
+int rgx::_loopEndEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
 //    cout << "_loopEdge\n\n" << endl;
     if (thread._loopTimes.top() < static_cast<unsigned int>(_lowerLoopTimes)) {
         ++thread._loopTimes.top();
-        thread.transTo(_loopStartNode, threadstack);
+        thread.transTo(_loopStartNode, input, threadstack);
     } else if (_upperLoopTimes > 0 && thread._loopTimes.top() == static_cast<unsigned int>(_upperLoopTimes)) {
         //如果是最大次数，直接往后走
         thread._loopTimes.pop(); 
-        thread.transTo(_toNode, threadstack);
+        thread.transTo(_toNode, input, threadstack);
     } else {
         //否则执行split
         if (_greedy) {
@@ -191,19 +207,23 @@ int rgx::_loopEndEdge::match(const std::u16string&, _thread& thread, std::stack<
 
             thread._loopTimes.pop();
             for (unsigned int i = 0; i < _toNode->edges.size(); ++i) {
-                threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                if (_toNode->edges[i]->lookahead(input, thread._sp)) {
+                    threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                }
             }
             ++alreadyLoop;
             thread._loopTimes.push(alreadyLoop);
-            thread.transTo(_loopStartNode, threadstack);
+            thread.transTo(_loopStartNode, input, threadstack);
         } else {
             //否则优先往后走,并将循环的thread入栈
             ++thread._loopTimes.top();
             for (unsigned int i = 0; i < _loopStartNode->edges.size(); ++i) {
-                threadstack.push(_thread(_loopStartNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                if (_loopStartNode->edges[i]->lookahead(input, thread._sp)) {
+                    threadstack.push(_thread(_loopStartNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                }
             }
             thread._loopTimes.pop();
-            thread.transTo(_toNode, threadstack);
+            thread.transTo(_toNode, input, threadstack);
         }
     }
     return 0;
@@ -230,11 +250,19 @@ _captureStartEdge* rgx::_captureStartEdge::makeCopy() const {
     return new _captureStartEdge(*this);
 }
 
-int rgx::_captureStartEdge::match(const std::u16string&, _thread& thread, std::stack<_thread>& threadstack, const shared_ptr<_edgeManager>&) {
+int rgx::_captureStartEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
 //    cout << "_captureStartEdge  " << thread._sp <<"\n\n" << endl;
     thread._capture->_capVector[_captureIndex].first = thread._sp;
-    thread.transTo(_toNode, threadstack);
+    thread.transTo(_toNode, input, threadstack);
     return 0;
+}
+
+bool rgx::_captureStartEdge::lookahead(const u16string& input, unsigned int index) {
+    if (_toNode->edges.size() == 1) {
+        return _toNode->edges[0]->lookahead(input, index);
+    } else {
+        return true;
+    }
 }
 
 /*==============================captureEndEdge===========================================*/
@@ -258,11 +286,19 @@ _captureEndEdge* rgx::_captureEndEdge::makeCopy() const {
     return new _captureEndEdge(*this);
 }
 
-int rgx::_captureEndEdge::match(const std::u16string&, _thread& thread, std::stack<_thread>& threadstack, const shared_ptr<_edgeManager>&) {
+int rgx::_captureEndEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
 //    cout << "captureEdge\n\n" << endl;
     thread._capture->_capVector[_captureIndex].second = thread._sp;
-    thread.transTo(_toNode, threadstack);
+    thread.transTo(_toNode, input, threadstack);
     return 0;
+}
+
+bool rgx::_captureEndEdge::lookahead(const u16string& input, unsigned int index) {
+    if (_toNode->edges.size() == 1) {
+        return _toNode->edges[0]->lookahead(input, index);
+    } else {
+        return true;
+    }
 }
 
 /*===============================referenceEdge============================================*/
@@ -285,7 +321,7 @@ string rgx::_referenceEdge::toString() {
 _referenceEdge* rgx::_referenceEdge::makeCopy() const {
     return new _referenceEdge(*this);
 }
-int rgx::_referenceEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack, const shared_ptr<_edgeManager>&) {
+int rgx::_referenceEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
     for (unsigned int i = thread._capture->_capVector[_referenceIndex].first; i < thread._capture->_capVector[_referenceIndex].second; ) {
         if (input[i] == input[thread._sp]) {
             ++thread._sp;
@@ -294,9 +330,10 @@ int rgx::_referenceEdge::match(const std::u16string& input, _thread& thread, std
             return -1;
         }
     }
-    thread.transTo(_toNode, threadstack);
+    thread.transTo(_toNode, input, threadstack);
     return 0;
 }
+
 
 /*================================positionEdge===========================================*/
 
@@ -319,7 +356,7 @@ _positionEdge* rgx::_positionEdge::makeCopy() const {
     return new _positionEdge(*this);
 }
 
-int rgx::_positionEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>&, const shared_ptr<_edgeManager>&) {
+int rgx::_positionEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>&) {
     switch (_position) {
         case LINE_BEGIN :
             if (thread._sp == 0 || input[thread._sp - 1] == '\n') {

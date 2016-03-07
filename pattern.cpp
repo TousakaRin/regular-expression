@@ -205,8 +205,7 @@ std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM(const u16string &inp
     while (!threadstack.empty()) {
         auto cthread = threadstack.top();
         threadstack.pop();
-        if (cthread.match(input, threadstack, _edgeMgr) == 0) {
-//            cthread._capture->justToTest("abcaabc");
+        if (cthread.match(input, threadstack) == 0) {
             return std::move(cthread._capture);
         } 
     }

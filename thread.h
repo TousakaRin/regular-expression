@@ -25,9 +25,9 @@ public:
     std::stack<unsigned int>     _loopTimes;           //记录路径上各个循环的重复次数
     std::unique_ptr<matchObj> _capture;
     unsigned int _maxCaptureSlot;
-    int match(const std::u16string &, std::stack<_thread>&, const std::shared_ptr<_edgeManager>&);
+    int match(const std::u16string &, std::stack<_thread>&);
     //返回0表示匹配成功, 其他值表示匹配失败
-    void transTo(const visitor_ptr<_NFA_Node>&, std::stack<_thread>&);
+    void transTo(const visitor_ptr<_NFA_Node>&, const std::u16string&, std::stack<_thread>&);
 };
 
 

@@ -49,22 +49,18 @@ void rgx::_NFA_Node::addEpsilonEdge(const visitor_ptr<_NFA_Node> &goalNode) {
 void rgx::_NFA_Node::addCharSetEdge(visitor_ptr<_NFA_Node> &goalNode, const _charSet_node& csn) {
     goalNode->setEffective();
     set<unsigned int> acceptSet;
-    if (auto p = csn._edgeMgr.lock()) {
-        for (auto range : csn._acceptSet) {
-            unsigned int pre = p->_hashTable[range.first];
-            acceptSet.insert(pre);
-            for (auto i = range.first; i <  range.second; ++i) {
-                if (p->_hashTable[i] != pre) {
-                    acceptSet.insert(pre);
-                    pre = p->_hashTable[i];
-                }
+    for (auto range : csn._acceptSet) {
+        unsigned int pre = csn._edgeMgr->_hashTable[range.first];
+        acceptSet.insert(pre);
+        for (auto i = range.first; i <  range.second; ++i) {
+            if (csn._edgeMgr->_hashTable[i] != pre) {
+                acceptSet.insert(pre);
+                pre = csn._edgeMgr->_hashTable[i];
             }
         }
-        unique_ptr<_charSetEdge> newEdge(new _charSetEdge(goalNode, std::move(acceptSet), csn._delOPT));
-        edges.push_back(std::move(newEdge));
-    } else {
-        err("function addCharSetEdge : 找不到对象 ");
     }
+    unique_ptr<_charSetEdge> newEdge(new _charSetEdge(goalNode, std::move(acceptSet), csn._edgeMgr, csn._delOPT));
+    edges.push_back(std::move(newEdge));
 }
 
 
@@ -112,3 +108,10 @@ void rgx::_NFA_Node::addPositionEdge(visitor_ptr<_NFA_Node> &goalNode, const _po
                 new _positionEdge(goalNode, psn._position)));
 }
 
+bool rgx::_NFA_Node::lookahead(const u16string input, unsigned int index) {
+    if (edges.size() == 1) {
+        return edges[0]->lookahead(input, index);
+    } else {
+        return true;
+    }
+}
