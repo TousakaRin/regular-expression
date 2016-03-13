@@ -54,7 +54,6 @@ public:
     //范围内的每一个字符由'|'连接
     //如pair{a, c + 1} === [a-c] === (?:a|b|c)
     //deleteOPT 表示\W, \S, \D三个集合
-    enum deleteOPT {NO_WORD = 0x1, NO_DIGIT = 0x10, NO_SPACE = 0x100};
     unsigned int _delOPT;
     std::shared_ptr<_edgeManager> _edgeMgr;
     std::vector<std::pair<char16_t, char16_t>> _acceptSet;

@@ -2,6 +2,7 @@
 #include <string>
 #include "stringTools.h"
 #include "thread.h"
+#include "typedef.h"
 #include "nfaNode.h"
 
 using namespace rgx;
@@ -52,8 +53,8 @@ int rgx::_epsilonEdge::match(const std::u16string&, _thread&, std::stack<_thread
 
 /*===================================charSetEdge=======================================*/
 
-rgx::_charSetEdge::_charSetEdge(const visitor_ptr<_NFA_Node> &toNode, set<unsigned int> &&s, const shared_ptr<_edgeManager>& edgeMgr, unsigned int delopt) 
-    : _NFA_Edge(toNode), _acceptSet(s), _delOPT(delopt), _edgeMgr(edgeMgr) {}
+rgx::_charSetEdge::_charSetEdge(const visitor_ptr<_NFA_Node> &toNode, set<unsigned int> &&s, const shared_ptr<_edgeManager>& edgeMgr, unsigned int delopt, bool ivs) 
+    : _NFA_Edge(toNode), _acceptSet(s), _delOPT(delopt), _edgeMgr(edgeMgr), inversion(ivs) {}
 
 
 _charSetEdge *rgx::_charSetEdge::makeCopy() const {
@@ -61,7 +62,7 @@ _charSetEdge *rgx::_charSetEdge::makeCopy() const {
 }
 
 rgx::_charSetEdge::_charSetEdge(const _charSetEdge& cse) 
-    : _NFA_Edge(cse._toNode), _acceptSet(cse._acceptSet), _delOPT(cse._delOPT), _edgeMgr(cse._edgeMgr) {
+    : _NFA_Edge(cse._toNode), _acceptSet(cse._acceptSet), _delOPT(cse._delOPT), _edgeMgr(cse._edgeMgr), inversion(cse.inversion) {
 
 }
 
@@ -79,16 +80,36 @@ string rgx::_charSetEdge::toString() {
 
 int rgx::_charSetEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
 //    if (thread._sp < input.size())
-//    cout << "\n charSetEdge " << ucs2_to_string(input.substr(thread._sp, 1)) << "\n" << endl;
+//        cout << "\n charSetEdge " << thread._sp << " " << ucs2_to_string(input.substr(thread._sp, 1)) << "\n" << endl;
 //    else
 //        cout << "\n charSetEdge nononon \n" << endl;
-    if (thread._sp >= input.size() || _acceptSet.find(_edgeMgr->getIndex(input[thread._sp])) == _acceptSet.end()) {
+    if (thread._sp >= input.size()) {
         return -1;
-    } else {
-        ++thread._sp;
-        thread.transTo(_toNode, input, threadstack);
-        return 0;
     }
+    if (_delOPT & NO_WORD && (isDigit(input[thread._sp]) || isLetter(input[thread._sp]))) {
+        //如果包含\W 标记并且sp指向数字或者字母，则匹配失败
+        return -1;
+    }
+    if (_delOPT & NO_DIGIT && isDigit(input[thread._sp])) {
+        //如果包含\D 且遇见数字，匹配失败
+        return -1;
+    }
+    if (_delOPT & NO_SPACE && isSpace(input[thread._sp])) {
+        //如果包含\S却遇见了空白字符
+        return -1;
+    }
+//    if (inversion) {
+//        cout << "inversion" << endl;
+//    }
+//    if (_acceptSet.find(_edgeMgr->getIndex(input[thread._sp])) == _acceptSet.end()) {
+//        cout << "not find" << endl;
+//    }
+    if ((inversion == true) ^  (_acceptSet.find(_edgeMgr->getIndex(input[thread._sp])) == _acceptSet.end())) {
+        return -1;
+    } 
+    ++thread._sp;
+    thread.transTo(_toNode, input, threadstack);
+    return 0;
 }
 
 bool rgx::_charSetEdge::lookahead(const u16string& input, unsigned int index) {
@@ -137,6 +158,9 @@ int rgx::_loopStartEdge::match(const std::u16string& input, _thread& thread, std
         //  _lowerLoopTimes = 0 && _upperLoopTimes != 0, 此时在loopstartedge根据是否贪婪进行不同的split
         if (_greedy) {
             //将循环0次压栈,贪婪失败时尝试
+            if (_loopEndNode->edges.size() == 0) {
+                threadstack.push(_thread(_loopEndNode, thread._sp, 0, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+            }
             for (unsigned int i = 0; i < _loopEndNode->edges.size(); ++i) {
                 if (_loopEndNode->edges[i]->lookahead(input, thread._sp)) {
                     threadstack.push(_thread(_loopEndNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
@@ -198,17 +222,13 @@ int rgx::_loopEndEdge::match(const std::u16string& input, _thread& thread, std::
         if (_greedy) {
             //如果贪婪，优先往回走,并将往后走的thread入栈
             auto alreadyLoop = thread._loopTimes.top();
-
-//
-//            cout << "alreadyLoop :" << alreadyLoop << endl;
-//            cout << "current capture :" << endl; 
-//            thread._capture->justToTest("abcaabc");
-//
-
             thread._loopTimes.pop();
-            for (unsigned int i = 0; i < _toNode->edges.size(); ++i) {
-                if (_toNode->edges[i]->lookahead(input, thread._sp)) {
-                    threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+            if (_toNode->edges.size() == 0) {
+                threadstack.push(_thread(_toNode, thread._sp, 0, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+            }
+            for (unsigned int edgeIndex = 0; edgeIndex < _toNode->edges.size(); ++edgeIndex) {
+                if (_toNode->edges[edgeIndex]->lookahead(input, thread._sp)) {
+                    threadstack.push(_thread(_toNode, thread._sp, edgeIndex, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
                 }
             }
             ++alreadyLoop;
@@ -287,7 +307,7 @@ _captureEndEdge* rgx::_captureEndEdge::makeCopy() const {
 }
 
 int rgx::_captureEndEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>& threadstack) {
-//    cout << "captureEdge\n\n" << endl;
+//    cout << "captureEdge : " << thread._sp << "\n\n" << endl;
     thread._capture->_capVector[_captureIndex].second = thread._sp;
     thread.transTo(_toNode, input, threadstack);
     return 0;

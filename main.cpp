@@ -19,6 +19,7 @@ int main() {
         auto pattern = compile(s);
         pattern->traversal();
         u16string str = string_to_ucs2("abcaabc");
+        cout << "str: " << ucs2_to_string(str) << endl;
         auto mb = pattern->match(str);
         mb->justToTest(str);
     }

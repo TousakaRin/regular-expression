@@ -14,9 +14,9 @@ u16string rgx::matchObj::group(unsigned int i) {
 }
 
 void rgx::matchObj::justToTest(const std::u16string& s) {
-    cout << "wtf? " << _capVector.size() << endl;
+    cout << "_capVector size: " << _capVector.size() << endl;
     for (unsigned int i = 1; i < _capVector.size(); ++i) {
-        cout << ucs2_to_string(s.substr(_capVector[i].first, _capVector[i].second - _capVector[i].first)) << endl;
+        cout << "index : " << _capVector[i].first << " "<< _capVector[i].second << " " << ucs2_to_string(s.substr(_capVector[i].first, _capVector[i].second - _capVector[i].first)) << endl;
     }
 }
 

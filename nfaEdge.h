@@ -50,7 +50,7 @@ public:
 class _charSetEdge : public _NFA_Edge {
 public:
     _charSetEdge(const _charSetEdge&);
-    _charSetEdge(const visitor_ptr<_NFA_Node> &toNode, std::set<unsigned int>&& s, const std::shared_ptr<_edgeManager>&, unsigned int delopt);
+    _charSetEdge(const visitor_ptr<_NFA_Node> &toNode, std::set<unsigned int>&& s, const std::shared_ptr<_edgeManager>&, unsigned int delopt, bool ivs);
 
     std::set<unsigned int> _acceptSet;
     unsigned int _delOPT;
@@ -60,6 +60,7 @@ public:
     virtual int match(const std::u16string&, _thread&, std::stack<_thread>&);
     std::shared_ptr<_edgeManager> _edgeMgr;
     virtual bool lookahead(const std::u16string&, unsigned int);
+    bool inversion;
 };
 
 //循环开始边

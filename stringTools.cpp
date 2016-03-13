@@ -89,3 +89,6 @@ bool rgx::isLetter(char16_t c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
+bool rgx::isSpace(char16_t c) {
+    return c == '\t' || c == '\r' || c == 'n' || c == '\b' || c == '\f' || c == '\v';
+}

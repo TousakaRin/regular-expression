@@ -59,7 +59,7 @@ void rgx::_NFA_Node::addCharSetEdge(visitor_ptr<_NFA_Node> &goalNode, const _cha
             }
         }
     }
-    unique_ptr<_charSetEdge> newEdge(new _charSetEdge(goalNode, std::move(acceptSet), csn._edgeMgr, csn._delOPT));
+    unique_ptr<_charSetEdge> newEdge(new _charSetEdge(goalNode, std::move(acceptSet), csn._edgeMgr, csn._delOPT, csn.inversion));
     edges.push_back(std::move(newEdge));
 }
 
