@@ -28,7 +28,7 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 ---
 
 ###字符类
--  ** \. **  
+-  **.**  
 匹配除\n之外的任意字符
 -  ** \ **  
 转义字符
