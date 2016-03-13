@@ -21,7 +21,7 @@
 
    cout << ucs2_to_string(matchobj.group(0)) << endl;
    //使用matchObj的group() 方法来获取捕获的分组，0 号分组表示整个捕获到的字符串，
-   group方法返回utf16的u16string, 可以用usc2_to_string来转换为等价的string
+   //group方法返回utf16的u16string, 可以用usc2_to_string来转换为等价的string
 
 
 ----------------------------------------------------------------------------------------
