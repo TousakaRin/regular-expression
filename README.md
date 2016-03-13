@@ -1,29 +1,24 @@
 
-
-          一个基于NFA的正则表达式引擎,语法和接口基本与python的re模块一致  
+ 一个基于NFA的正则表达式引擎,语法和接口基本与python的re模块一致  
 ---
 
----
    usage :
 --- 
 
-   `string regular_expression = u8"regular[123]";  
-   //作为正则表达式的字符串用utf8编码 string 来表示, 支持中文, 引擎内部统一使用
-   //ucs2（即utf16) 来储存
+    string regular_expression = u8"regular[123]";  
+    //作为正则表达式的字符串用utf8编码 string 来表示, 支持中文, 引擎内部统一使用
+    //ucs2（即utf16) 来储存
 
-   auto t = rgx::complie (regular_expression);
-   // compile 返回一个编译后的正则表达式, compile的返回类型为 unique_ptr<_pattern>
+    auto t = rgx::complie (regular_expression);
+    // compile 返回一个编译后的正则表达式, compile的返回类型为 unique_ptr<_pattern>
    
-   auto matchobj t->match(u8"input", startposition);
-   // 使用编译之后的_pattern来匹配输入串，同理输入串使用utf8编码的 string 来表示
-   // 使用match方法将返回unique_ptr<matchObj>
+    auto matchobj t->match(u8"input", startposition);
+    // 使用编译之后的_pattern来匹配输入串，同理输入串使用utf8编码的 string 来表示
+    // 使用match方法将返回unique_ptr<matchObj>
 
-   cout << ucs2_to_string(matchobj.group(0)) << endl;
-   //使用matchObj的group() 方法来获取捕获的分组，0 号分组表示整个捕获到的字符串，
-   //group方法返回utf16的u16string, 可以用usc2_to_string来转换为等价的string
-   `
-
-
+    cout << ucs2_to_string(matchobj.group(0)) << endl;
+    //使用matchObj的group() 方法来获取捕获的分组，0 号分组表示整个捕获到的字符串，
+    //group方法返回utf16的u16string, 可以用usc2_to_string来转换为等价的string
 ---
 
 
