@@ -23,10 +23,6 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 ---
 
 
-
-
-
-
 详细语法说明: 
 ---
 
@@ -49,6 +45,7 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 字符类，匹配字母或数字
 - \W  
 字符类，匹配非字母及非数字
+
 ###重复 
 - *  
 表示循环 0 至无限多次
@@ -62,6 +59,7 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 表示循环 m 至 n 次
 - \*?, +? {m, n}?, ??  
 表示非贪婪，默认为贪婪
+
 ###位置字符 
 - ^  
 匹配字符串的开头，在多行模式中匹配某一行的开头
@@ -71,6 +69,7 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 仅匹配字符串开头
 - \Z
 仅匹配字符串的结尾
+
 ###捕获
 > 注：捕获只能捕获最后一次匹配时遇见的字符，如用'abcfg' 来匹配表达式 '(a|b|c)\*fg'，分组 1 捕获到的内容只有'c'， 而不是'abc'， 同理，引用也只能引用最近一次的捕获内容
 - |  
@@ -85,6 +84,7 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 匿名引用，引用分组为number的捕获内容，number不能为0
 - (?P=nam    e)  
 具名引用, 引用别名为name 的分组
+
 ###预查
 > 注：用于预查的表达式的语法使用纯正则表达式的语法，不再支持任何扩展，如引用,捕获等扩展
 - (?= )  
