@@ -4,6 +4,7 @@
 
 usage:
 --- 
+---
 ```cpp
 string regular_expression = u8"regular[123]";  
 //作为正则表达式的字符串用utf8编码 string 来表示, 支持中文, 引擎内部统一使用
@@ -48,7 +49,7 @@ cout << ucs2_to_string(matchobj.group(0)) << endl;
 字符类，匹配非字母及非数字
 
 ###重复 
--  *****  
+-  **\***  
 表示循环 0 至无限多次
 -  **+**  
 表示循环 1 至无限多次
