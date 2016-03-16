@@ -35,9 +35,9 @@ class _pattern {
     friend class _NFA_Node;
 public:
     _pattern(_ast&);
-    std::unique_ptr<matchObj> match(const std::u16string&, unsigned int startPosition = 0);
-    std::shared_ptr<matchObj> search(const std::u16string&);
-    std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&);
+    std::unique_ptr<matchObj> match(const std::u16string&, unsigned int startPosition = 0, matchMode = SGL);
+    std::shared_ptr<matchObj> search(const std::u16string&, unsigned int startPosition = 0, matchMode = SGL);
+    std::shared_ptr<std::vector<matchObj>> findall(const std::u16string&, unsigned int startPosition = 0, matchMode = SGL);
     void traversal();                                      // 广度优先对NFA进行遍历, 用于debug- -
     void err();
     void err(const std::string&);
@@ -56,9 +56,9 @@ private:
     void lookaheadOptimize();
     _objectPool<_NFA_Node>  _objPool;
     void mergeClosure(unsigned int);         //将闭包中的边拷贝到关键节点中,用于epsilonCut() 
-    virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int) = 0;
-    virtual std::unique_ptr<matchObj> _search(const std::u16string&) = 0;
-    virtual std::unique_ptr<std::vector<matchObj>> _findall(const std::u16string&) = 0;
+    virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int, matchMode) = 0;
+    virtual std::unique_ptr<matchObj> _search(const std::u16string&, unsigned int, matchMode) = 0;
+    virtual std::unique_ptr<std::vector<matchObj>> _findall(const std::u16string&, unsigned int, matchMode) = 0;
 };
 
 class _dfa_pattern : public _pattern {
@@ -66,9 +66,9 @@ public:
     _dfa_pattern (_ast&);
 
 private:
-    virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int);
-    virtual std::unique_ptr<matchObj> _search(const std::u16string&);
-    virtual std::unique_ptr<std::vector<matchObj>> _findall(const std::u16string&);
+    virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int, matchMode);
+    virtual std::unique_ptr<matchObj> _search(const std::u16string&, unsigned int, matchMode);
+    virtual std::unique_ptr<std::vector<matchObj>> _findall(const std::u16string&, unsigned int, matchMode);
 };
 
 class _nfa_pattern : public _pattern {
@@ -77,10 +77,10 @@ public:
     void generateNFA();
 
 private:
-    virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int);
-    virtual std::unique_ptr<matchObj> _search(const std::u16string&);
-    virtual std::unique_ptr<std::vector<matchObj>> _findall(const std::u16string&);
-    std::unique_ptr<matchObj> backtrackingVM(const std::u16string&, unsigned int);
+    virtual std::unique_ptr<matchObj> _match(const std::u16string&, unsigned int, matchMode);
+    virtual std::unique_ptr<matchObj> _search(const std::u16string&, unsigned int, matchMode);
+    virtual std::unique_ptr<std::vector<matchObj>> _findall(const std::u16string&, unsigned int, matchMode);
+    std::unique_ptr<matchObj> backtrackingVM(const std::u16string&, unsigned int, matchMode);
 };
 
 }

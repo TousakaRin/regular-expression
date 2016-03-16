@@ -8,6 +8,8 @@ enum position_type {LINE_BEGIN, LINE_END, STRING_BEGIN, STRING_END, BREAK_OFF, N
 
 enum deleteOPT {NO_WORD = 0x1, NO_DIGIT = 0x10, NO_SPACE = 0x100};  //删除字符集，\W, \D, \S
 
+enum matchMode {SGL, MUL};
+
 }
 #endif
 

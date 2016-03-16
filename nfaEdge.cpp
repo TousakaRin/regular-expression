@@ -159,11 +159,11 @@ int rgx::_loopStartEdge::match(const std::u16string& input, _thread& thread, std
         if (_greedy) {
             //将循环0次压栈,贪婪失败时尝试
             if (_loopEndNode->edges.size() == 0) {
-                threadstack.push(_thread(_loopEndNode, thread._sp, 0, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                threadstack.push(_thread(_loopEndNode, thread._sp, 0, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture)), thread._mode));
             }
             for (unsigned int i = 0; i < _loopEndNode->edges.size(); ++i) {
                 if (_loopEndNode->edges[i]->lookahead(input, thread._sp)) {
-                    threadstack.push(_thread(_loopEndNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                    threadstack.push(_thread(_loopEndNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture)), thread._mode));
                 }
             }
             //进入循环,记录循环次数
@@ -173,7 +173,7 @@ int rgx::_loopStartEdge::match(const std::u16string& input, _thread& thread, std
             //将贪婪循环压栈
             for (unsigned int i = 0; i < _toNode->edges.size(); ++i) {
                 if (_toNode->edges[i]->lookahead(input, thread._sp)) {
-                    threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                    threadstack.push(_thread(_toNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture)), thread._mode));
                 }
             }
             //优先执行非贪婪部分
@@ -224,11 +224,11 @@ int rgx::_loopEndEdge::match(const std::u16string& input, _thread& thread, std::
             auto alreadyLoop = thread._loopTimes.top();
             thread._loopTimes.pop();
             if (_toNode->edges.size() == 0) {
-                threadstack.push(_thread(_toNode, thread._sp, 0, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                threadstack.push(_thread(_toNode, thread._sp, 0, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture)), thread._mode));
             }
             for (unsigned int edgeIndex = 0; edgeIndex < _toNode->edges.size(); ++edgeIndex) {
                 if (_toNode->edges[edgeIndex]->lookahead(input, thread._sp)) {
-                    threadstack.push(_thread(_toNode, thread._sp, edgeIndex, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                    threadstack.push(_thread(_toNode, thread._sp, edgeIndex, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture)), thread._mode));
                 }
             }
             ++alreadyLoop;
@@ -239,7 +239,7 @@ int rgx::_loopEndEdge::match(const std::u16string& input, _thread& thread, std::
             ++thread._loopTimes.top();
             for (unsigned int i = 0; i < _loopStartNode->edges.size(); ++i) {
                 if (_loopStartNode->edges[i]->lookahead(input, thread._sp)) {
-                    threadstack.push(_thread(_loopStartNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture))));
+                    threadstack.push(_thread(_loopStartNode, thread._sp, i, thread._loopTimes, unique_ptr<matchObj>(new matchObj(*thread._capture)), thread._mode));
                 }
             }
             thread._loopTimes.pop();
@@ -379,19 +379,33 @@ _positionEdge* rgx::_positionEdge::makeCopy() const {
 int rgx::_positionEdge::match(const std::u16string& input, _thread& thread, std::stack<_thread>&) {
     switch (_position) {
         case LINE_BEGIN :
-            if (thread._sp == 0 || input[thread._sp - 1] == '\n') {
+			if (thread._mode == SGL) {
+				if (thread._sp == thread._startPosition) {
+            	    break;
+            	} else {
+            	    return -1;
+            	}
+			}
+            if (thread._sp == thread._startPosition || input[thread._sp - 1] == '\n') {
                 break; 
             } else {
                 return -1;
             }
         case LINE_END :
+			if (thread._mode == SGL) {
+				if (thread._sp == input.size()) {
+            	    break;
+            	} else {
+            	    return -1;
+            	}
+			}
             if (thread._sp == input.size() || input[thread._sp - 1] == '\n') {
                 break;
             } else {
                 return -1;
             }
         case STRING_BEGIN :
-            if (thread._sp == 0) {
+            if (thread._sp == thread._startPosition) {
                 break;
             } else {
                 return -1;

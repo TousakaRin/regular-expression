@@ -4,22 +4,21 @@
 using namespace std;
 using namespace rgx;
 
-rgx::_thread::_thread(const visitor_ptr<_NFA_Node> &pc, unsigned int maxCaptureSlot, unsigned int sp, unsigned int edgeIndex) 
-    :  _sp(sp), _nodePtr(pc), _edgeIndex(edgeIndex), _capture(new matchObj(maxCaptureSlot)), _maxCaptureSlot(maxCaptureSlot) { 
+rgx::_thread::_thread(const visitor_ptr<_NFA_Node> &pc, unsigned int maxCaptureSlot, unsigned int sp, unsigned int edgeIndex, matchMode m) 
+    :  _sp(sp), _nodePtr(pc), _edgeIndex(edgeIndex), _capture(new matchObj(maxCaptureSlot)), _mode(m), _startPosition(m) { 
 }
 
-rgx::_thread::_thread(const visitor_ptr<_NFA_Node> &pc, unsigned int sp, unsigned int edgeIndex, const stack<unsigned int> &loopstack, unique_ptr<matchObj>&& capture)
-    : _sp(sp), _nodePtr(pc), _edgeIndex(edgeIndex), _loopTimes(loopstack), _capture(std::move(capture)) {
-        _maxCaptureSlot = _capture->_capVector.size();
+rgx::_thread::_thread(const visitor_ptr<_NFA_Node> &pc, unsigned int sp, unsigned int edgeIndex, const stack<unsigned int> &loopstack, unique_ptr<matchObj>&& capture, matchMode m)
+    : _sp(sp), _nodePtr(pc), _edgeIndex(edgeIndex), _loopTimes(loopstack), _capture(std::move(capture)), _mode(m), _startPosition(m) {
 }
 
 rgx::_thread::_thread(const _thread& thread)
-    : _sp(thread._sp), _nodePtr(thread._nodePtr), _edgeIndex(thread._edgeIndex), _loopTimes(thread._loopTimes), _capture(new matchObj(*thread._capture)), _maxCaptureSlot(thread._maxCaptureSlot) {
+    : _sp(thread._sp), _nodePtr(thread._nodePtr), _edgeIndex(thread._edgeIndex), _loopTimes(thread._loopTimes), _capture(new matchObj(*thread._capture)), _mode(thread._mode), _startPosition(thread._startPosition) {
 
 }
 
 rgx::_thread::_thread(_thread&& thread)
-    : _sp(thread._sp), _nodePtr(thread._nodePtr), _edgeIndex(thread._edgeIndex), _loopTimes(thread._loopTimes), _capture(std::move(thread._capture)), _maxCaptureSlot(thread._maxCaptureSlot) {
+    : _sp(thread._sp), _nodePtr(thread._nodePtr), _edgeIndex(thread._edgeIndex), _loopTimes(thread._loopTimes), _capture(std::move(thread._capture)), _mode(thread._mode), _startPosition(thread._startPosition) {
 
 }
 
@@ -50,7 +49,7 @@ void rgx::_thread::transTo(const visitor_ptr<_NFA_Node>& pc, const u16string& in
         _nodePtr = pc;
         for (unsigned int i = 1; i < pc->edges.size(); ++i) {
             if (pc->edges[i]->lookahead(input, _sp)) {
-                threadstack.push(_thread(pc, _sp, i, _loopTimes, unique_ptr<matchObj>(new matchObj(*_capture))));
+                threadstack.push(_thread(pc, _sp, i, _loopTimes, unique_ptr<matchObj>(new matchObj(*_capture)), _mode));
             }
         }
     } 

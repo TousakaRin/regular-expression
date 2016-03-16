@@ -108,8 +108,8 @@ void rgx::_pattern::epsilonCut() {
     }
 }
 
-unique_ptr<matchObj> rgx::_pattern::match(const u16string&s, unsigned int startPosition) {
-    return _match(s, startPosition);
+unique_ptr<matchObj> rgx::_pattern::match(const u16string&s, unsigned int startPosition, matchMode mode) {
+    return _match(s, startPosition, mode);
 }
 
 
@@ -163,15 +163,15 @@ _dfa_pattern::_dfa_pattern(_ast& ast) : _pattern(ast)/*, _DFAptr(make_shared<_DF
 }
 
 
-std::unique_ptr<matchObj> rgx::_dfa_pattern::_match(const std::u16string&, unsigned int) {
+std::unique_ptr<matchObj> rgx::_dfa_pattern::_match(const std::u16string&, unsigned int, matchMode) {
     return nullptr;
 }
 
-std::unique_ptr<matchObj> rgx::_dfa_pattern::_search(const std::u16string&) {
+std::unique_ptr<matchObj> rgx::_dfa_pattern::_search(const std::u16string&, unsigned int, matchMode) {
     return nullptr;
 }
 
-std::unique_ptr<std::vector<matchObj>> rgx::_dfa_pattern::_findall(const std::u16string&) {
+std::unique_ptr<std::vector<matchObj>> rgx::_dfa_pattern::_findall(const std::u16string&, unsigned int, matchMode) {
     return nullptr;
 }
 
@@ -185,23 +185,23 @@ rgx::_nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
 
 }
 
-std::unique_ptr<matchObj> rgx::_nfa_pattern::_match(const u16string& input, unsigned int startPosition) {
-    auto matchobj = backtrackingVM(input, startPosition);
+std::unique_ptr<matchObj> rgx::_nfa_pattern::_match(const u16string& input, unsigned int startPosition, matchMode mode) {
+    auto matchobj = backtrackingVM(input, startPosition, mode);
     matchobj->addReAndInput(_re, input);
     return matchobj;
 }
 
-std::unique_ptr<matchObj> _nfa_pattern::_search(const u16string&) {
+std::unique_ptr<matchObj> _nfa_pattern::_search(const u16string&, unsigned int, matchMode) {
     return nullptr;
 }
 
-std::unique_ptr<std::vector<matchObj>> _nfa_pattern::_findall(const u16string&) {
+std::unique_ptr<std::vector<matchObj>> _nfa_pattern::_findall(const u16string&, unsigned int, matchMode) {
     return nullptr;
 }
 
-std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM(const u16string &input, unsigned int startPosition) {
+std::unique_ptr<matchObj> rgx::_nfa_pattern::backtrackingVM(const u16string &input, unsigned int startPosition, matchMode mode) {
     stack<_thread> threadstack;    
-    threadstack.push(_thread(_NFAptr->first, _captureIndex, startPosition, 0));
+    threadstack.push(_thread(_NFAptr->first, _captureIndex, startPosition, 0, mode));
     while (!threadstack.empty()) {
         auto cthread = threadstack.top();
         threadstack.pop();
