@@ -54,7 +54,7 @@ int rgx::_epsilonEdge::match(const std::u16string&, _thread&, std::stack<_thread
 /*===================================charSetEdge=======================================*/
 
 rgx::_charSetEdge::_charSetEdge(const visitor_ptr<_NFA_Node> &toNode, set<unsigned int> &&s, const shared_ptr<_edgeManager>& edgeMgr, unsigned int delopt, bool ivs) 
-    : _NFA_Edge(toNode), _acceptSet(s), _delOPT(delopt), _edgeMgr(edgeMgr), inversion(ivs) {}
+    : _NFA_Edge(toNode), _acceptSet(std::move(s)), _delOPT(delopt), _edgeMgr(edgeMgr), inversion(ivs) {}
 
 
 _charSetEdge *rgx::_charSetEdge::makeCopy() const {

@@ -30,6 +30,7 @@ public:
     virtual _NFA_Edge* makeCopy() const = 0;
     virtual int match(const std::u16string&, _thread&, std::stack<_thread>&) = 0;
     virtual bool lookahead(const std::u16string&, unsigned int);
+	virtual ~_NFA_Edge() = default;
 };
 
 
