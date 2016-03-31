@@ -55,7 +55,7 @@ private:
     visitor_ptr<_astNode> normalTrans();                                           //常规转义    \s,\?,\+
     visitor_ptr<_charSet_node> charClass();                                        //字符类      [^xxx] | [xxx]
     visitor_ptr<_numCount_node> num_term();                                        //数量单位    ?, ??, +, +?....
-    bool charSetTrans(visitor_ptr<_charSet_node>&);                                //处理字符类中的预定义字符类 /w,/W,/s,/S,/d,/D
+    bool charSetTrans(visitor_ptr<_charSet_node>&);                                //处理字符类中的预定义字符类 \w,\W,\s,\S,\d,\D
     
     void err();                                                                    //出错处理
     int getNum();                                                                  //从pos位置获取一个非负整数，失败时返回-1
