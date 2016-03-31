@@ -17,7 +17,8 @@ std::vector<std::string> testCase = {
 //    u8"(?:a|b|c)*",
 //    u8"(a|b|c)*abc",
 //    "",
-    u8"([^abc])*"
+//    u8"([^abc])*",
+    u8"([^abc]*)"
 };
 #endif
 

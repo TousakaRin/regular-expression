@@ -24,7 +24,7 @@ public:
     visitor_ptr<_NFA_Node>  _nodePtr;                  //nfa的节点指针，即PC
     unsigned int            _edgeIndex;                //对应节点的edge指针
     std::stack<unsigned int>     _loopTimes;           //记录路径上各个循环的重复次数
-    std::unique_ptr<matchObj> _capture;
+    std::unique_ptr<matchObj>    _capture;
 	matchMode  _mode;                                  //单行模式还是多行模式
 	unsigned int _startPosition;                       //匹配开始位置
 

@@ -31,18 +31,17 @@ vector<u16string> rgx::matchObj::groups() {
 }
 
 pair<unsigned int, unsigned int> rgx::matchObj::span(unsigned int) {
-    return pair<unsigned int, unsigned int> (0,0);
+    return pair<unsigned int, unsigned int> (_pos, _endpos);
 }
 
-u16string rgx::matchObj::group(const std::string&) {
-    return u16string();
+u16string rgx::matchObj::group(const std::string& groupname) {
+	return group((*_nameMap)[string_to_ucs2(groupname)]);
 }
 
-void rgx::matchObj::clear() {
-    
-}
 
-void rgx::matchObj::addReAndInput(const u16string& re, const u16string& input) {
+//在回溯算法运行时，不再拷贝re和input，仅仅在成功返回matchObj时，通过这个函数将re 和input加到match里边
+void rgx::matchObj::addReAndInput(const u16string& re, const u16string& input, const unique_ptr<map<u16string, unsigned int>>& namemap) {
     _re = re;
     _input = input;
+	_nameMap.reset(new map<u16string, unsigned int>(namemap->begin(), namemap->end()));
 }

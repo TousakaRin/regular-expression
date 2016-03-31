@@ -187,7 +187,7 @@ rgx::_nfa_pattern::_nfa_pattern(_ast& ast) : _pattern(ast) {
 
 std::unique_ptr<matchObj> rgx::_nfa_pattern::_match(const u16string& input, unsigned int startPosition, matchMode mode) {
     auto matchobj = backtrackingVM(input, startPosition, mode);
-    matchobj->addReAndInput(_re, input);
+    matchobj->addReAndInput(_re, input, _nameMap);
     return matchobj;
 }
 
