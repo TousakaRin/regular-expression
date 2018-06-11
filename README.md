@@ -10,10 +10,10 @@ std::string regular_expression = u8"regular[123]";
 // 作为正则表达式的字符串用 utf8 编码 std::string 来表示, 支持中文, 引擎内部统一使用
 // ucs2（即utf16) 来储存
 
-auto t = rgx::complie (regular_expression);
+auto pattern  = rgx::complie (regular_expression);
 // compile 返回一个编译后的正则表达式, compile 的返回类型为 std::unique_ptr<_pattern>
 
-auto matchobjt->match(u8"input", startposition);
+auto matchobj = pattern->match(u8"input", startposition);
 // 使用编译之后的 _pattern 来匹配输入串，同理输入串使用utf8编码的 std::string 来表示
 // 使用match方法将返回 std::unique_ptr<matchObj>
 
